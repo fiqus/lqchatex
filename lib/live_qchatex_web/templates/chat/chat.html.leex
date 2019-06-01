@@ -1,0 +1,32 @@
+<section class="row">
+  <article class="column">
+      <h2>Current living chats: <%= @counters.chats%></h2>
+  </article>
+  <article class="column">
+      <h2>Current living users: <%= @counters.users%></h2>
+  </article>
+</section>
+
+<section class="row">
+  <article class="column">
+    <h2>Qchatex ID: <%= @chat.id %></h2>
+    <h4><%= @chat.title %></h4>
+  </article>
+</section>
+
+<%= if @success do %>
+  <p class="alert alert-success" role="success"><%= @success %></p>
+<% end %>
+<%= if @error do %>
+  <p class="alert alert-danger" role="alert"><%= @error %></p>
+<% end %>
+<%= if @info do %>
+  <p class="alert alert-info" role="alert"><%= @info %></p>
+<% end %>
+
+<%= if @error do %>
+<section class="row">
+    <article class="phx-error"><%= @error %></article>
+    <!--article class="column" phx-click="remove" phx-value="<%= @chat.id %>">REMOVE</article-->
+</section>
+<% end %>
