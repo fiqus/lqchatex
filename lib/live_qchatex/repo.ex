@@ -6,7 +6,7 @@ defmodule LiveQchatex.Repo do
   alias LiveQchatex.Models
 
   # @TODO Avoid this for create_tables!()
-  @models [Models.Chat, Models.User]
+  @models [Models.Chat, Models.User, Models.Message]
 
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
@@ -22,11 +22,21 @@ defmodule LiveQchatex.Repo do
   end
 
   def subscribe(topic) do
+    # LiveQchatexWeb.Endpoint.subscribe(topic)
     Phoenix.PubSub.subscribe(LiveQchatex.PubSub, topic)
   end
 
+  def broadcast(data, topic, event) do
+    # LiveQchatexWeb.Endpoint.broadcast(topic, event, data)
+    Phoenix.PubSub.broadcast_from(LiveQchatex.PubSub, self(), topic, {event, data})
+  end
+
+  def broadcast_all(data, topic, event) do
+    Phoenix.PubSub.broadcast(LiveQchatex.PubSub, topic, {event, data})
+  end
+
   def broadcast_event({:ok, result}, topic, event) do
-    Phoenix.PubSub.broadcast(LiveQchatex.PubSub, topic, {event, result})
+    broadcast(result, topic, event)
     {:ok, result}
   end
 
@@ -96,12 +106,12 @@ defmodule LiveQchatex.Repo do
     end
   end
 
-  @spec find(Memento.Table.record(), Tuple.t() | list(Tuple.t())) ::
-          {:ok, list(Memento.Table)} | {:error, any()}
+  @spec find(Memento.Table.name(), Tuple.t() | list(Tuple.t())) ::
+          {:ok, list(Memento.Table.record())} | {:error, any()}
   def find(model, guards \\ {}) do
     try do
       Memento.transaction!(fn ->
-        [] = result = model |> Memento.Query.select(guards)
+        result = model |> Memento.Query.select(guards)
         Logger.debug("Repo.find() OK: #{inspect(result)}")
         {:ok, result}
       end)
@@ -124,18 +134,20 @@ defmodule LiveQchatex.Repo do
 
   # @TODO Use config to [disc_copies: nodes] for tables
   defp setup_database!(_config, nodes \\ [node()]) do
-    :ok = create_schema(nodes)
+    create_schema!(nodes)
     create_tables!(nodes)
   end
 
-  defp create_schema(nodes), do: create_schema(nodes, Memento.Schema.create(nodes))
-  defp create_schema(_, {:error, {_, {:already_exists, _}}}), do: :ok
-
-  defp create_schema(nodes, _) do
+  defp create_schema!(nodes) do
     Memento.stop()
-    rs = Memento.Schema.create(nodes)
-    Memento.start()
-    rs
+
+    case Memento.Schema.create(nodes) do
+      :ok -> :ok
+      {:error, {_, {:already_exists, _}}} -> :ok
+      {:error, reason} -> raise reason
+    end
+
+    :ok = Memento.start()
   end
 
   defp create_tables!(nodes) do

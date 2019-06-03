@@ -8,9 +8,9 @@ defmodule LiveQchatex.Chats do
 
   @topic inspect(__MODULE__)
 
-  def subscribe do
-    Repo.subscribe(@topic)
-  end
+  def subscribe, do: subscribe(@topic)
+  def subscribe(%Models.Chat{} = chat), do: subscribe("#{@topic}/#{chat.id}")
+  def subscribe(topic), do: Repo.subscribe(topic)
 
   @doc """
   Gets a single chat.
@@ -46,14 +46,16 @@ defmodule LiveQchatex.Chats do
 
   """
   def create_chat(attrs \\ %{}) do
-    %Models.Chat{id: Repo.random_string(64), title: "Untitled qchatex!", expires: 60 * 60}
-    |> Repo.write(
-      attrs
-      # @TODO Improve this!
-      |> Repo.to_atom_map()
-      |> remove_empty(:title)
-      |> remove_empty(:expires)
-    )
+    now = utc_now()
+
+    %Models.Chat{
+      id: Repo.random_string(64),
+      title: "Untitled qchatex!",
+      last_activity: now,
+      created_at: now,
+      members: %{}
+    }
+    |> write_chat_attrs(attrs)
     |> Repo.broadcast_event(@topic, [:chat, :created])
   end
 
@@ -71,8 +73,34 @@ defmodule LiveQchatex.Chats do
   """
   def update_chat(%Models.Chat{} = chat, attrs) do
     chat
-    |> Repo.write(attrs)
+    |> write_chat_attrs(attrs)
     |> Repo.broadcast_event(@topic, [:chat, :updated])
+  end
+
+  @doc """
+  Adds a member to a chat.
+  """
+  def add_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
+    {:ok, chat} =
+      chat
+      |> Map.put(:members, chat.members |> Map.put(user.id, Models.User.foreign_fields(user)))
+      |> Repo.write()
+
+    Repo.broadcast(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
+    chat
+  end
+
+  @doc """
+  Removes a member from a chat.
+  """
+  def remove_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
+    {:ok, chat} =
+      chat
+      |> Map.put(:members, chat.members |> Map.delete(user.id))
+      |> Repo.write()
+
+    Repo.broadcast(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
+    chat
   end
 
   @doc """
@@ -104,14 +132,61 @@ defmodule LiveQchatex.Chats do
   """
   def count_chats, do: Repo.count(Models.Chat)
 
-  def create_user(sid, attrs \\ %{}) do
-    %Models.User{id: sid, nickname: "Unnamed"}
+  defp write_chat_attrs(%Models.Chat{} = chat, attrs) do
+    chat
     |> Repo.write(
       attrs
+      # @TODO Improve this!
       |> Repo.to_atom_map()
-      |> remove_empty(:nickname)
+      |> remove_empty(:title)
+      |> remove_empty(:last_activity)
+      |> remove_empty(:created_at)
     )
+  end
+
+  def get_or_create_user(sid) do
+    case Repo.read(Models.User, sid) do
+      {:ok, %Models.User{}} = ok -> ok
+      {:error, %MatchError{}} -> create_user(sid)
+      err -> err
+    end
+  end
+
+  @doc """
+  Creates an user.
+
+  ## Examples
+
+      iex> create_user(sid, %{field: value})
+      {:ok, %User{}}
+
+      iex> create_user(%{field: bad_value})
+      {:error, any()}
+
+  """
+  def create_user(sid, attrs \\ %{}) do
+    %Models.User{id: sid, nickname: "Unnamed", created_at: utc_now(), last_activity: utc_now()}
+    |> write_user_attrs(attrs)
     |> Repo.broadcast_event(@topic, [:user, :created])
+  end
+
+  @doc """
+  Updates an user.
+
+  ## Examples
+
+      iex> update_user(user, %{field: new_value})
+      {:ok, %User{}}
+
+      iex> update_user(user, %{field: bad_value})
+      {:error, any()}
+
+  """
+  def update_user(%Models.User{} = user, attrs) do
+    user
+    |> Map.put(:last_activity, utc_now())
+    |> write_user_attrs(attrs)
+    |> Repo.broadcast_event(@topic, [:user, :updated])
   end
 
   @doc """
@@ -125,6 +200,49 @@ defmodule LiveQchatex.Chats do
   """
   def count_users, do: Repo.count(Models.User)
 
+  defp write_user_attrs(%Models.User{} = user, attrs) do
+    user
+    |> Repo.write(
+      attrs
+      # @TODO Improve this!
+      |> Repo.to_atom_map()
+      |> remove_empty(:nickname)
+    )
+  end
+
+  def get_messages(%Models.Chat{} = chat) do
+    {:ok, messages} = Repo.find(Models.Message, {:==, :chat_id, chat.id})
+    messages
+  end
+
+  def create_room_message(chat_id, from_user, text) do
+    %Models.Message{chat_id: chat_id, from_user: from_user, text: text}
+    |> create_message()
+  end
+
+  def create_private_message(from_user, to_user, text) do
+    %Models.Message{from_user: from_user, to_user: to_user, text: text}
+    |> create_message()
+  end
+
+  defp create_message(%Models.Message{} = message) do
+    message
+    |> Map.put(
+      :from_user,
+      foreign_fields(&Models.User.foreign_fields/1, message.from_user)
+    )
+    |> Map.put(
+      :to_user,
+      foreign_fields(&Models.User.foreign_fields/1, message.to_user)
+    )
+    |> Map.put(:timestamp, utc_now())
+    |> Repo.write()
+    |> Repo.broadcast_event("#{@topic}/#{message.chat_id}", [:message, :created])
+  end
+
+  defp foreign_fields(_, nil), do: nil
+  defp foreign_fields(func, data), do: func.(data)
+
   ######## HELPERS ########
 
   defp remove_empty(attrs, field) do
@@ -135,4 +253,6 @@ defmodule LiveQchatex.Chats do
 
   defp empty_value?(val) when val in [nil, ""], do: true
   defp empty_value?(_), do: false
+
+  defp utc_now(), do: DateTime.utc_now() |> DateTime.truncate(:second)
 end

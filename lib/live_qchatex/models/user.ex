@@ -3,17 +3,23 @@ defmodule LiveQchatex.Models.User do
   User model module.
   """
   use Memento.Table,
-    attributes: [:id, :socket_id, :nickname],
-    index: [:socket_id],
-    type: :ordered_set,
-    autoincrement: true
+    attributes: [:id, :nickname, :last_activity, :created_at],
+    index: [:last_activity, :created_at],
+    type: :ordered_set
 
   @typedoc """
   User struct
   """
   @type t :: %__MODULE__{
-          id: nil | String.t(),
-          socket_id: nil | String.t(),
-          nickname: nil | String.t()
+          id: String.t(),
+          nickname: String.t(),
+          last_activity: DateTime.t(),
+          created_at: DateTime.t()
         }
+
+  def foreign_fields(%__MODULE__{} = user),
+    do: %{
+      id: user.id,
+      nickname: user.nickname
+    }
 end

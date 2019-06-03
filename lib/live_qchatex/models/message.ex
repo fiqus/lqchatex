@@ -3,8 +3,8 @@ defmodule LiveQchatex.Models.Message do
   Message model module.
   """
   use Memento.Table,
-    attributes: [:id, :from_socket, :to_socket, :text],
-    index: [:from_socket, :to_socket],
+    attributes: [:id, :chat_id, :from_user, :to_user, :text, :timestamp],
+    index: [:chat_id, :from_user, :to_user],
     type: :ordered_set,
     autoincrement: true
 
@@ -12,9 +12,11 @@ defmodule LiveQchatex.Models.Message do
   Message struct
   """
   @type t :: %__MODULE__{
-          id: nil | String.t(),
-          from_socket: nil | String.t(),
-          to_socket: nil | String.t(),
-          text: nil | String.t()
+          id: Integer.t(),
+          chat_id: nil | String.t(),
+          from_user: String.t(),
+          to_user: nil | String.t(),
+          text: String.t(),
+          timestamp: DateTime.t()
         }
 end
