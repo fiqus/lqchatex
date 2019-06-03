@@ -2,3 +2,23 @@
 
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
+
+.messages {
+  height: 400px;
+  overflow-y: scroll;
+}
+
+.chatroom {
+  width: 900px;
+}
+
+.chat-content {
+  display: inline-block;
+  width: 600px;
+}
+
+.members {
+  display: inline-block;
+  float: right;
+  width: 200px;
+}

@@ -5,9 +5,9 @@ defmodule LiveQchatex.ChatsTest do
   alias LiveQchatex.Models
 
   describe "chats" do
-    @valid_attrs %{title: "some title", expires: 1}
-    @update_attrs %{title: "some updated title", expires: 10}
-    @invalid_attrs %{title: nil, expires: -1}
+    @valid_attrs %{title: "some title", last_activity: 1, created_at: 11}
+    @update_attrs %{title: "some updated title", last_activity: 10, created_at: 100}
+    @invalid_attrs %{title: nil, last_activity: -1, created_at: -11}
 
     def chat_fixture(attrs \\ %{}) do
       {:ok, chat} =
@@ -24,19 +24,24 @@ defmodule LiveQchatex.ChatsTest do
     end
 
     test "create_chat/1 with empty data creates a chat with its defaults" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
       assert {:ok, %Models.Chat{} = chat} = Chats.create_chat()
       assert chat.title == "Untitled qchatex!"
-      assert chat.expires == 60 * 60
+      assert chat.last_activity <= now
+      assert chat.created_at <= now
 
-      assert {:ok, %Models.Chat{} = chat} = Chats.create_chat(%{"title" => "", "expires" => ""})
+      assert {:ok, %Models.Chat{} = chat} =
+               Chats.create_chat(%{"title" => "", "last_activity" => "", "created_at" => ""})
+
       assert chat.title == "Untitled qchatex!"
-      assert chat.expires == 60 * 60
+      assert chat.last_activity <= now
+      assert chat.created_at <= now
     end
 
     test "create_chat/1 with valid data creates a chat" do
       assert {:ok, %Models.Chat{} = chat} = Chats.create_chat(@valid_attrs)
       assert chat.title == @valid_attrs.title
-      assert chat.expires == @valid_attrs.expires
+      assert chat.last_activity == @valid_attrs.last_activity
     end
 
     @tag :skip
@@ -49,7 +54,7 @@ defmodule LiveQchatex.ChatsTest do
       chat = chat_fixture()
       assert {:ok, %Models.Chat{} = chat} = Chats.update_chat(chat, @update_attrs)
       assert chat.title == @update_attrs.title
-      assert chat.expires == @update_attrs.expires
+      assert chat.last_activity == @update_attrs.last_activity
     end
 
     @tag :skip

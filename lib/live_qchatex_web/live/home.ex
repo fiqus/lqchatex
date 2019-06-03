@@ -15,19 +15,31 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     ChatView.render("home.html", assigns)
   end
 
-  def handle_info({[:chat | _action], _result} = info, socket) do
-    IO.inspect(info, label: "[home-view] HANDLE INFO CHAT")
-    {:noreply, socket |> fetch()}
+  def handle_info({[:chat, :created], _chat} = info, socket) do
+    Logger.debug("[#{socket.id}][home-view] HANDLE CHAT CREATED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> update_counter(:chats, 1)}
   end
 
-  def handle_info({[:user | _action], _result} = info, socket) do
-    IO.inspect(info, label: "[home-view] HANDLE INFO USER")
-    {:noreply, socket |> fetch()}
+  def handle_info({[:user, :created], _user} = info, socket) do
+    Logger.debug("[#{socket.id}][home-view] HANDLE USER CREATED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> update_counter(:users, 1)}
+  end
+
+  def handle_info(info, socket) do
+    Logger.warn("[#{socket.id}][home-view] UNHANDLED INFO: #{inspect(info)}")
+    {:noreply, socket}
   end
 
   def handle_event("start", %{"chat" => data}, socket) do
     try do
       {:ok, chat} = Chats.create_chat(data)
+      {:ok, _user} = Chats.update_user(socket.assigns.user, data)
       redirect_to_chat(socket, chat)
     rescue
       err ->
@@ -39,6 +51,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
   def handle_event("join", %{"chat" => data}, socket) do
     try do
       chat = Chats.get_chat!(data["id"])
+      {:ok, _user} = Chats.update_user(socket.assigns.user, data)
       redirect_to_chat(socket, chat)
     rescue
       err ->
@@ -54,7 +67,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
   end
 
   defp fetch_user(socket, sid) do
-    {:ok, %Models.User{} = user} = Chats.create_user(sid)
+    {:ok, %Models.User{} = user} = Chats.get_or_create_user(sid)
     socket |> assign(user: user)
   end
 
@@ -67,6 +80,10 @@ defmodule LiveQchatexWeb.LiveChat.Home do
       },
       error: ""
     )
+  end
+
+  defp update_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
+    socket |> assign(:counters, counters |> Map.put(key, counters[key] + amount))
   end
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}

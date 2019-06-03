@@ -19,3 +19,24 @@ liveSocket.connect()
 //
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
+
+// Select the node that will be observed for mutations
+const targetNode = document.getElementsByClassName("messages")[0]
+
+document.addEventListener("DOMContentLoaded", function() {
+  targetNode.scrollTop = targetNode.scrollHeight
+});
+// Options for the observer (which mutations to observe)
+let config = { attributes: true, childList: true, subtree: true };
+// Callback function to execute when mutations are observed
+var callback = function(mutationsList, observer) {
+  for(var mutation of mutationsList) {
+    if (mutation.type == 'childList') {
+      targetNode.scrollTop = targetNode.scrollHeight
+    }
+  }
+};
+// Create an observer instance linked to the callback function
+var observer = new MutationObserver(callback);
+// Start observing the target node for configured mutations
+observer.observe(targetNode, config);

@@ -7,11 +7,48 @@
   </article>
 </section>
 
-<section class="row">
-  <article class="column">
-    <h2>Qchatex ID: <%= @chat.id %></h2>
-    <h4><%= @chat.title %></h4>
-  </article>
+<h4>Socket ID: <%= @socket.id %></h4>
+
+<section class="chatroom">
+  <div class="chat-content">
+    <div class="list-group">
+      <div class="list-group-item active">
+        <h2><%= @chat.title %></h2>
+        <h4><b>Qchatex ID:</b><br/><%= @chat.id %></h4>
+      </div>
+      <div class="list-group-item messages">
+        <ul>
+          <%=for message <- @messages do %>
+            <p>
+              <b><%= message.from_user.nickname %></b> at <small><%= message.timestamp %></small>: <%= message.text %>
+            </p>
+          <% end %>
+        </ul>
+
+      </div>
+    </div>
+
+    <div class="form-group">
+      <form action="#send" phx-submit="message" phx_change="typing">
+        <%= text_input :message, :text, autocomplete: "off", placeholder: "write your message here..." %>
+        <%= hidden_input :message, :user_id, value: @user.id  %>
+        <%= hidden_input :message, :chat_id, value: @chat.id  %>
+        <%= submit "Send", phx_disable_with: "Sending..." %>
+      </form>
+    </div>
+  </div>
+  <div class="members list-group">
+    <ul>
+      <div class="list-group-item active">
+        <h3>Members</h3>
+      </div>
+      <div class="list-group-item">
+        <%= for user <- @members do %>
+          <p><%= user.nickname %><%= elipses(user.typing) %></p>
+        <% end %>
+      </div>
+    </ul>
+  </div>
 </section>
 
 <%= if @success do %>
