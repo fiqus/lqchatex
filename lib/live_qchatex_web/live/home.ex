@@ -36,10 +36,10 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     {:noreply, socket}
   end
 
-  def handle_event("start", %{"chat" => data}, socket) do
+  def handle_event("start", %{"chat" => cdata, "user" => udata}, socket) do
     try do
-      {:ok, chat} = Chats.create_chat(data)
-      {:ok, _user} = Chats.update_user(socket.assigns.user, data)
+      {:ok, chat} = Chats.create_chat(cdata)
+      {:ok, _user} = Chats.update_user(socket.assigns.user, udata)
       redirect_to_chat(socket, chat)
     rescue
       err ->
@@ -48,10 +48,10 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     end
   end
 
-  def handle_event("join", %{"chat" => data}, socket) do
+  def handle_event("join", %{"chat" => cdata, "user" => udata}, socket) do
     try do
-      chat = Chats.get_chat!(data["id"])
-      {:ok, _user} = Chats.update_user(socket.assigns.user, data)
+      chat = Chats.get_chat!(cdata["id"])
+      {:ok, _user} = Chats.update_user(socket.assigns.user, udata)
       redirect_to_chat(socket, chat)
     rescue
       err ->

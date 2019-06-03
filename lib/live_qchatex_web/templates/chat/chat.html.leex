@@ -30,7 +30,7 @@
 
     <div class="form-group">
       <form action="#send" phx-submit="message" phx_change="typing">
-        <%= text_input :message, :text, autocomplete: "off", placeholder: "write your message here..." %>
+        <%= text_input :message, :text, autocomplete: "off", placeholder: "#{@user.nickname}, write your message here..." %>
         <%= hidden_input :message, :user_id, value: @user.id  %>
         <%= hidden_input :message, :chat_id, value: @chat.id  %>
         <%= submit "Send", phx_disable_with: "Sending..." %>
