@@ -3,22 +3,28 @@
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
-.messages {
-  height: 400px;
-  overflow-y: scroll;
+.container{
+  /* max-width: none;
+  text-align: center; */
 }
 
-.chatroom {
-  width: 900px;
+.chat-room {
+  /* margin: 1em 5em;
+  min-width: 1024px;
+  text-align: center; */
 }
 
 .chat-content {
   display: inline-block;
-  width: 600px;
+  text-align: left;
 }
 
-.members {
+.chat-members {
   display: inline-block;
-  float: right;
-  width: 200px;
+  text-align: left;
+}
+
+.messages {
+  height: 400px;
+  overflow-y: scroll;
 }
