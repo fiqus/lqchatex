@@ -57,6 +57,22 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> update_counter(:users, 1)}
   end
 
+  def handle_info({[:user, :typing], user_id} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING START: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> update_typing(user_id, true)}
+  end
+
+  def handle_info({[:user, :typing_stop], user_id} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING STOP: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> update_typing(user_id, false)}
+  end
+
   def handle_info({[:message, :created], message} = info, socket) do
     Logger.debug("[#{socket.id}][chat-view] HANDLE MESSAGE CREATED: #{inspect(info)}",
       ansi_color: :magenta
@@ -79,6 +95,19 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       err ->
         Logger.error("Can't send the message #{inspect(err)}")
         response_error(socket, "Couldn't send the message!")
+    end
+  end
+
+  def handle_event("typing", _data, socket) do
+    try do
+      # %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
+      # :ok = Chats.broadcast_user_typing(chat_id, user_id)
+      # Process.send_after(self(), {[:user, :typing_stop], user_id}, 60*60)
+      {:noreply, socket}
+    rescue
+      err ->
+        Logger.error("Can't update typing status #{inspect(err)}")
+        {:noreply, socket}
     end
   end
 
@@ -119,14 +148,18 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> assign(:messages, messages ++ [message])
   end
 
-  defp parse_members(%Models.Chat{} = chat, %Models.User{} = user \\ %Models.User{}) do
-    chat.members
-    |> Enum.map(fn {member_id, member} ->
-      member |> Map.put(:typing, is_member_typing?(member_id, user))
-    end)
+  defp update_typing(%{:assigns => %{:chat => chat}} = socket, user_id, is_typing) do
+    socket |> assign(:members, parse_members(chat, {user_id, is_typing}))
   end
 
-  defp is_member_typing?(member_id, %{:id => user_id}), do: user_id != nil && member_id == user_id
+  defp parse_members(%Models.Chat{} = chat, {user_id, is_typing} \\ {nil, false}) do
+    chat.members
+    |> Enum.map(fn {member_id, member} ->
+      if user_id == nil || user_id == member_id,
+        do: member |> Map.put(:typing, is_typing),
+        else: member
+    end)
+  end
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}
 end

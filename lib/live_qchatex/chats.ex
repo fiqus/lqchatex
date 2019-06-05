@@ -210,6 +210,11 @@ defmodule LiveQchatex.Chats do
     )
   end
 
+  def broadcast_user_typing(chat_id, user_id) do
+    user_id
+    |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing])
+  end
+
   def get_messages(%Models.Chat{} = chat) do
     {:ok, messages} = Repo.find(Models.Message, {:==, :chat_id, chat.id})
     messages
