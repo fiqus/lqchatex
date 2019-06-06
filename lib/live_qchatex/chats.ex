@@ -122,6 +122,23 @@ defmodule LiveQchatex.Chats do
   end
 
   @doc """
+  Clears older chats.
+  """
+  def clear_chats(timespan) do
+    count = count_chats()
+    {:ok, chats} = Repo.find(Models.Chat, {:<=, :last_activity, utc_now() - timespan})
+    found = length(chats)
+    # @TODO Remove chat messages!
+    chats |> Enum.each(&Repo.delete(&1))
+
+    if found > 0 do
+      Repo.broadcast_all(count - found, @topic, [:chat, :cleared])
+    end
+
+    found
+  end
+
+  @doc """
   Returns the count of chats.
 
   ## Examples
@@ -190,6 +207,22 @@ defmodule LiveQchatex.Chats do
   end
 
   @doc """
+  Clears older users.
+  """
+  def clear_users(timespan) do
+    count = count_users()
+    {:ok, users} = Repo.find(Models.User, {:<=, :last_activity, utc_now() - timespan})
+    found = length(users)
+    users |> Enum.each(&Repo.delete(&1))
+
+    if found > 0 do
+      Repo.broadcast_all(count - found, @topic, [:user, :cleared])
+    end
+
+    found
+  end
+
+  @doc """
   Returns the count of users.
 
   ## Examples
@@ -214,6 +247,8 @@ defmodule LiveQchatex.Chats do
     user_id
     |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing])
   end
+
+  def utc_now(), do: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_unix()
 
   def get_messages(%Models.Chat{} = chat) do
     {:ok, messages} = Repo.find(Models.Message, {:==, :chat_id, chat.id})
@@ -258,6 +293,4 @@ defmodule LiveQchatex.Chats do
 
   defp empty_value?(val) when val in [nil, ""], do: true
   defp empty_value?(_), do: false
-
-  defp utc_now(), do: DateTime.utc_now() |> DateTime.truncate(:second)
 end

@@ -40,6 +40,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> update_counter(:chats, 1)}
   end
 
+  def handle_info({[:chat, :cleared], counter} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT CLEARED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> set_counter(:chats, counter)}
+  end
+
   def handle_info({[:chat, :members_updated], members} = info, socket) do
     Logger.debug("[#{socket.id}][chat-view] HANDLE MEMBERS UPDATED: #{inspect(info)}",
       ansi_color: :magenta
@@ -55,6 +63,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     )
 
     {:noreply, socket |> update_counter(:users, 1)}
+  end
+
+  def handle_info({[:user, :cleared], counter} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE USER CLEARED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> set_counter(:users, counter)}
   end
 
   def handle_info({[:user, :typing], user_id} = info, socket) do
@@ -140,8 +156,12 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     )
   end
 
+  defp set_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
+    socket |> assign(:counters, counters |> Map.put(key, amount))
+  end
+
   defp update_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
-    socket |> assign(:counters, counters |> Map.put(key, counters[key] + amount))
+    socket |> set_counter(key, counters[key] + amount)
   end
 
   defp update_messages(%{:assigns => %{:messages => messages}} = socket, message) do

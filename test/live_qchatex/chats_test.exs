@@ -24,7 +24,7 @@ defmodule LiveQchatex.ChatsTest do
     end
 
     test "create_chat/1 with empty data creates a chat with its defaults" do
-      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      now = Chats.utc_now()
       assert {:ok, %Models.Chat{} = chat} = Chats.create_chat()
       assert chat.title == "Untitled qchatex!"
       assert chat.last_activity <= now

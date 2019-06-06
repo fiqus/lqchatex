@@ -11,7 +11,9 @@ defmodule LiveQchatex.Application do
       # Start the application repository
       LiveQchatex.Repo,
       # Start the endpoint when the application starts
-      LiveQchatexWeb.Endpoint
+      LiveQchatexWeb.Endpoint,
+      # Start the cron tasks worker
+      LiveQchatex.Cron
       # Starts a worker by calling: LiveQchatex.Worker.start_link(arg)
       # {LiveQchatex.Worker, arg},
     ]

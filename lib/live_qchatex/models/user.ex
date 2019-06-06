@@ -13,7 +13,7 @@ defmodule LiveQchatex.Models.User do
   @type t :: %__MODULE__{
           id: String.t(),
           nickname: String.t(),
-          last_activity: DateTime.t(),
+          last_activity: Integer.t(),
           created_at: DateTime.t()
         }
 

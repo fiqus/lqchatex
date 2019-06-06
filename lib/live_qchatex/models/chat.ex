@@ -14,7 +14,7 @@ defmodule LiveQchatex.Models.Chat do
           id: String.t(),
           socket_id: nil | String.t(),
           title: String.t(),
-          last_activity: DateTime.t(),
+          last_activity: Integer.t(),
           created_at: DateTime.t(),
           members: Map.t()
         }

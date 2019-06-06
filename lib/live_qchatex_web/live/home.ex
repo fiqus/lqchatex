@@ -23,12 +23,28 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     {:noreply, socket |> update_counter(:chats, 1)}
   end
 
+  def handle_info({[:chat, :cleared], counter} = info, socket) do
+    Logger.debug("[#{socket.id}][home-view] HANDLE CHAT CLEARED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> set_counter(:chats, counter)}
+  end
+
   def handle_info({[:user, :created], _user} = info, socket) do
     Logger.debug("[#{socket.id}][home-view] HANDLE USER CREATED: #{inspect(info)}",
       ansi_color: :magenta
     )
 
     {:noreply, socket |> update_counter(:users, 1)}
+  end
+
+  def handle_info({[:user, :cleared], counter} = info, socket) do
+    Logger.debug("[#{socket.id}][home-view] HANDLE USER CLEARED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> set_counter(:users, counter)}
   end
 
   def handle_info(info, socket) do
@@ -82,8 +98,12 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     )
   end
 
+  defp set_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
+    socket |> assign(:counters, counters |> Map.put(key, amount))
+  end
+
   defp update_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
-    socket |> assign(:counters, counters |> Map.put(key, counters[key] + amount))
+    socket |> set_counter(key, counters[key] + amount)
   end
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}
