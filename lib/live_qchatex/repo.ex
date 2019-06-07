@@ -163,9 +163,9 @@ defmodule LiveQchatex.Repo do
     :ok
   end
 
-  defp create_table(_nodes, model),
-    # do: create_table(Memento.Table.create(model, disc_copies: nodes))
-    do: create_table(Memento.Table.create(model))
+  defp create_table(nodes, model),
+    # do: create_table(Memento.Table.create(model))
+    do: create_table(Memento.Table.create(model, disc_copies: nodes))
 
   defp create_table({:error, {:already_exists, _}}), do: :ok
   defp create_table(:ok), do: :ok
