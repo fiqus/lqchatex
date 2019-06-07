@@ -58,7 +58,15 @@ defmodule LiveQchatex.MixProject do
   # Aliases are shortcuts or tasks specific to the current project.
   defp aliases do
     [
-      coverage: ["coveralls.html"]
+      coverage: ["coveralls.html"],
+      "mnesia.reset": fn _ -> reset_mnesia(Mix.env()) end
     ]
+  end
+
+  defp reset_mnesia(:prod), do: Mix.raise("Can't reset mnesia on production!")
+
+  defp reset_mnesia(_) do
+    IO.puts("Removing '.mnesia' directory..")
+    Mix.shell().cmd("rm -rf .mnesia")
   end
 end
