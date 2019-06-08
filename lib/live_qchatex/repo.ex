@@ -139,6 +139,7 @@ defmodule LiveQchatex.Repo do
   end
 
   defp create_schema!(nodes) do
+    Logger.info("Mnesia is stopping for schema creation..")
     Memento.stop()
 
     case Memento.Schema.create(nodes) do
@@ -148,6 +149,7 @@ defmodule LiveQchatex.Repo do
     end
 
     :ok = Memento.start()
+    Logger.info("Mnesia schema initialized and started!")
   end
 
   defp create_tables!(nodes) do
