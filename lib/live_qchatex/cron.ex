@@ -2,11 +2,6 @@ defmodule LiveQchatex.Cron do
   use GenServer
   require Logger
 
-  # Seconds
-  @interval_clean_chats 60 * 10
-  # Seconds
-  @interval_clean_users 60 * 5
-
   def start_link(arg) do
     GenServer.start_link(__MODULE__, arg)
   end
@@ -29,22 +24,26 @@ defmodule LiveQchatex.Cron do
   end
 
   defp clean_chats() do
+    interval_clean_chats = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_chats]
+
     Logger.debug(
-      "[task-clean-chats] Purging chats older than #{@interval_clean_chats / 60} minutes.."
+      "[task-clean-chats] Purging chats older than #{interval_clean_chats / 60} minutes.."
     )
 
-    count = LiveQchatex.Chats.clear_chats(@interval_clean_chats)
+    count = LiveQchatex.Chats.clear_chats(interval_clean_chats)
     Logger.debug("[task-clean-chats] Purged #{count} chats!")
-    Process.send_after(self(), :clean_chats, @interval_clean_chats * 1000)
+    Process.send_after(self(), :clean_chats, interval_clean_chats * 1000)
   end
 
   defp clean_users() do
+    interval_clean_users = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_users]
+
     Logger.debug(
-      "[task-clean-users] Purging users older than #{@interval_clean_users / 60} minutes.."
+      "[task-clean-users] Purging users older than #{interval_clean_users / 60} minutes.."
     )
 
-    count = LiveQchatex.Chats.clear_users(@interval_clean_users)
+    count = LiveQchatex.Chats.clear_users(interval_clean_users)
     Logger.debug("[task-clean-users] Purged #{count} users!")
-    Process.send_after(self(), :clean_users, @interval_clean_users * 1000)
+    Process.send_after(self(), :clean_users, interval_clean_users * 1000)
   end
 end

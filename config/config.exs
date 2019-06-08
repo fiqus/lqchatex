@@ -15,6 +15,12 @@ config :live_qchatex, LiveQchatexWeb.Endpoint,
   pubsub: [name: LiveQchatex.PubSub, adapter: Phoenix.PubSub.PG2],
   live_view: [signing_salt: "5VEQz06OfXTZJdJquA2C3zKPgmZE37jI7ev5HjLeDdeF9fjGHENmRilIbG5Rf3gz"]
 
+# Configures app timers in SECONDS
+config :live_qchatex, :timers,
+  cron_interval_clean_chats: 60 * 30,
+  cron_interval_clean_users: 60 * 10,
+  user_typing_timeout: 3
+
 # Configures Memento/Mnesia
 config :mnesia,
   # Notice the single quotes

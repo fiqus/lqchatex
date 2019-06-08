@@ -73,20 +73,22 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> set_counter(:users, counter)}
   end
 
-  def handle_info({[:user, :typing], user_id} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING START: #{inspect(info)}",
+  def handle_info({[:user, :typing, :end]} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING end: #{inspect(info)}",
       ansi_color: :magenta
     )
 
-    {:noreply, socket |> update_typing(user_id, true)}
+    %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
+    :ok = Chats.broadcast_user_typing(chat_id, user_id, false)
+    {:noreply, socket}
   end
 
-  def handle_info({[:user, :typing_stop], user_id} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING STOP: #{inspect(info)}",
+  def handle_info({[:user, :typing, is_typing], user_id} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING #{is_typing}: #{inspect(info)}",
       ansi_color: :magenta
     )
 
-    {:noreply, socket |> update_typing(user_id, false)}
+    {:noreply, socket |> update_typing(user_id, is_typing)}
   end
 
   def handle_info({[:message, :created], message} = info, socket) do
@@ -116,16 +118,28 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   def handle_event("typing", _data, socket) do
     try do
-      # %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
-      # :ok = Chats.broadcast_user_typing(chat_id, user_id)
-      # Process.send_after(self(), {[:user, :typing_stop], user_id}, 60*60)
-      {:noreply, socket}
+      %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
+      :ok = Chats.broadcast_user_typing(chat_id, user_id, true)
+
+      Map.get(socket.assigns, :typing_timer, nil) |> maybe_cancel_typing_timer()
+
+      timer_ref =
+        Process.send_after(
+          self(),
+          {[:user, :typing, :end]},
+          Application.get_env(:live_qchatex, :timers)[:user_typing_timeout] * 1000
+        )
+
+      {:noreply, socket |> assign(:typing_timer, timer_ref)}
     rescue
       err ->
         Logger.error("Can't update typing status #{inspect(err)}")
         {:noreply, socket}
     end
   end
+
+  defp maybe_cancel_typing_timer(nil), do: :ignore
+  defp maybe_cancel_typing_timer(typing_timer), do: Process.cancel_timer(typing_timer)
 
   defp fetch_chat!(socket, id) do
     socket |> assign(chat: Chats.get_chat!(id))
@@ -175,9 +189,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   defp parse_members(%Models.Chat{} = chat, {user_id, is_typing} \\ {nil, false}) do
     chat.members
     |> Enum.map(fn {member_id, member} ->
-      if user_id == nil || user_id == member_id,
-        do: member |> Map.put(:typing, is_typing),
-        else: member
+      member
+      |> Map.put(
+        :typing,
+        if(user_id == nil || user_id == member_id,
+          do: is_typing,
+          else: Map.get(member, :typing, false)
+        )
+      )
     end)
   end
 

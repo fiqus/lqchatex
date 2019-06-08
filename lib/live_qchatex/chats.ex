@@ -243,9 +243,10 @@ defmodule LiveQchatex.Chats do
     )
   end
 
-  def broadcast_user_typing(chat_id, user_id) do
+  def broadcast_user_typing(chat_id, user_id, is_typing) do
+    # @TODO Update last_activity
     user_id
-    |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing])
+    |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing, is_typing])
   end
 
   def utc_now(), do: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_unix()
