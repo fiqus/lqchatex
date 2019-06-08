@@ -54,7 +54,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     )
 
     chat = socket.assigns.chat |> Map.put(:members, members)
-    {:noreply, socket |> assign(:members, parse_members(chat))}
+    {:noreply, socket |> assign(chat: chat, members: parse_members(members))}
   end
 
   def handle_info({[:user, :created], _user} = info, socket) do
@@ -145,20 +145,18 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> assign(chat: Chats.get_chat!(id))
   end
 
-  defp fetch_user(socket, sid) do
+  defp fetch_user(%{:assigns => %{:chat => chat}} = socket, sid) do
     {:ok, %Models.User{} = user} = Chats.get_or_create_user(sid)
 
     socket
     |> assign(user: user)
-    |> assign(chat: socket.assigns.chat |> Chats.add_chat_member(user))
+    |> assign(chat: chat |> Chats.add_chat_member(user))
   end
 
-  defp fetch(socket) do
-    chat = socket.assigns.chat
-
+  defp fetch(%{:assigns => %{:chat => chat}} = socket) do
     socket
     |> assign(
-      members: parse_members(chat),
+      members: parse_members(chat.members),
       messages: Chats.get_messages(chat),
       counters: %{
         chats: Chats.count_chats(),
@@ -182,13 +180,17 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> assign(:messages, messages ++ [message])
   end
 
-  defp update_typing(%{:assigns => %{:chat => chat}} = socket, user_id, is_typing) do
-    socket |> assign(:members, parse_members(chat, {user_id, is_typing}))
+  defp update_typing(%{:assigns => %{:members => members}} = socket, user_id, is_typing) do
+    socket |> assign(:members, parse_members(members, user_id, is_typing))
   end
 
-  defp parse_members(%Models.Chat{} = chat, {user_id, is_typing} \\ {nil, false}) do
-    chat.members
-    |> Enum.map(fn {member_id, member} ->
+  defp parse_members(members, user_id \\ nil, is_typing \\ false) do
+    members
+    |> Enum.map(&parse_member(&1, user_id, is_typing))
+  end
+
+  defp parse_member({member_id, member}, user_id, is_typing),
+    do:
       member
       |> Map.put(
         :typing,
@@ -197,8 +199,9 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
           else: Map.get(member, :typing, false)
         )
       )
-    end)
-  end
+
+  defp parse_member(%{:id => id} = member, user_id, is_typing),
+    do: parse_member({id, member}, user_id, is_typing)
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}
 end
