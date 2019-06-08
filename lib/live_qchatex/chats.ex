@@ -13,6 +13,21 @@ defmodule LiveQchatex.Chats do
   def subscribe(topic), do: Repo.subscribe(topic)
 
   @doc """
+  Updates the last_activity of a given Memento.Table.record().
+
+  ## Examples
+
+      iex> update_last_activity(record)
+      {:ok, record} | {:error, any()}
+
+  """
+  def update_last_activity(%{} = record) do
+    record
+    |> Map.put(:last_activity, utc_now())
+    |> Repo.write()
+  end
+
+  @doc """
   Gets a single chat.
 
   Raises if the Chat does not exist.
@@ -244,7 +259,6 @@ defmodule LiveQchatex.Chats do
   end
 
   def broadcast_user_typing(chat_id, user_id, is_typing) do
-    # @TODO Update last_activity
     user_id
     |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing, is_typing])
   end
@@ -256,12 +270,16 @@ defmodule LiveQchatex.Chats do
     messages
   end
 
-  def create_room_message(chat_id, from_user, text) do
+  def create_room_message(chat, from_user, text) do
+    {:ok, %{:id => chat_id}} = update_last_activity(chat)
+
     %Models.Message{chat_id: chat_id, from_user: from_user, text: text}
     |> create_message()
   end
 
   def create_private_message(from_user, to_user, text) do
+    {:ok, _} = update_last_activity(from_user)
+
     %Models.Message{from_user: from_user, to_user: to_user, text: text}
     |> create_message()
   end

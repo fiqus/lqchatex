@@ -78,7 +78,8 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       ansi_color: :magenta
     )
 
-    %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
+    %{:chat => %{:id => chat_id}, :user => %{:id => user_id} = user} = socket.assigns
+    {:ok, _} = Chats.update_last_activity(user)
     :ok = Chats.broadcast_user_typing(chat_id, user_id, false)
     {:noreply, socket}
   end
@@ -104,10 +105,9 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket}
   end
 
-  def handle_event("message", %{"message" => data}, socket) do
+  def handle_event("message", %{"message" => data}, %{:assigns => assigns} = socket) do
     try do
-      assigns = socket.assigns
-      {:ok, message} = Chats.create_room_message(assigns.chat.id, assigns.user, data["text"])
+      {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, data["text"])
       {:noreply, socket |> update_messages(message)}
     rescue
       err ->
