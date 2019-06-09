@@ -12,7 +12,7 @@ use Mix.Config
 config :live_qchatex, LiveQchatexWeb.Endpoint,
   server: true,
   # check_origin: false,
-  # http: [:inet6, port: System.get_env("PORT") || 4000],
+  http: [:inet6, port: System.get_env("PORT") || 4000],
   # url: [host: "qchatex.fiqus.coop", port: System.get_env("PORT") || 80],
   url: [
     host: System.get_env("APP_NAME") <> ".gigalixirapp.com",
