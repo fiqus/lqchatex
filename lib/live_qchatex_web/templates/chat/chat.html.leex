@@ -19,9 +19,10 @@
       <div class="list-group-item messages">
         <ul>
           <%=for message <- @messages do %>
-            <p>
-              <b><%= message.from_user.nickname %></b> at <small><%= message.timestamp %></small>: <%= message.text %>
-            </p>
+            <li>
+              <b><%= message.from_user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
+              <div><%= message.text %></div>
+            </li>
           <% end %>
         </ul>
 

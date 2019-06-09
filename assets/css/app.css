@@ -37,6 +37,10 @@
   height: 400px;
   overflow-y: scroll;
   background-color: #e8e8e8;
+  padding: 5px;
+}
+.messages ul {
+  list-style: none;
 }
 
 .ellipsis:after {
