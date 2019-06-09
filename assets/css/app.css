@@ -19,6 +19,15 @@
   text-align: left;
 }
 
+.chat-id {
+  font-size: 16px;
+}
+.chat-id:hover {
+  color: #5cadf0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .chat-members {
   display: inline-block;
   text-align: left;
@@ -27,4 +36,30 @@
 .messages {
   height: 400px;
   overflow-y: scroll;
+  background-color: #e8e8e8;
+}
+
+.ellipsis:after {
+  color: red;
+  font-weight: bold;
+  font-size: 1em;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+  -webkit-animation: ellipsis steps(4,end) 1000ms infinite;      
+  animation: ellipsis steps(4,end) 1000ms infinite;
+  content: "\2026"; /* ascii code for the ellipsis character */
+  width: 0px;
+}
+
+@keyframes ellipsis {
+  to {
+    width: 1.25em;    
+  }
+}
+
+@-webkit-keyframes ellipsis {
+  to {
+    width: 1.25em;    
+  }
 }

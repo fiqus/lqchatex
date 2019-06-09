@@ -14,7 +14,7 @@
     <div class="list-group">
       <div class="list-group-item active">
         <h2><%= @chat.title %></h2>
-        <h4><b>Qchatex ID:</b><br/><%= @chat.id %></h4>
+        <h4><b>Qchatex ID:</b><br/><span onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></span></h4>
       </div>
       <div class="list-group-item messages">
         <ul>
@@ -44,7 +44,7 @@
       </div>
       <div class="list-group-item">
         <%= for user <- @members do %>
-          <p><%= user.nickname %><%= elipses(user.typing) %></p>
+          <p><%= user.nickname %><%= raw ellipsis(user.typing) %></p>
         <% end %>
       </div>
     </ul>

@@ -1,6 +1,6 @@
 defmodule LiveQchatexWeb.ChatView do
   use LiveQchatexWeb, :view
 
-  def elipses(true), do: "..."
-  def elipses(false), do: nil
+  def ellipsis(true), do: "<span class=\"ellipsis\"></span>"
+  def ellipsis(false), do: nil
 end
