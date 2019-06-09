@@ -10,7 +10,15 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :live_qchatex, LiveQchatexWeb.Endpoint,
-  url: [host: "qchatex.fiqus.coop", port: System.get_env("PORT") || 80],
+  server: true,
+  # check_origin: false,
+  # http: [:inet6, port: System.get_env("PORT") || 4000],
+  # url: [host: "qchatex.fiqus.coop", port: System.get_env("PORT") || 80],
+  url: [
+    host: System.get_env("APP_NAME") <> ".gigalixirapp.com",
+    port: System.get_env("PORT") || 80
+  ],
+  secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE"),
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Do not print debug messages in production
@@ -60,6 +68,3 @@ config :logger, level: :info
 # Then you can assemble a release by calling `mix release`.
 # See `mix help release` for more information.
 
-# Finally import the config/prod.secret.exs which loads secrets
-# and configuration from environment variables.
-import_config "prod.secret.exs"
