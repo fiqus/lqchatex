@@ -66,27 +66,12 @@ defmodule LiveQchatex.Repo do
     try do
       Memento.transaction!(fn ->
         %{} = result = model |> cast(attrs) |> Memento.Query.write()
-        Logger.debug("Repo.write() OK: #{inspect(result)}")
+        Logger.debug("Repo.write(#{inspect(model.__struct__)}) OK: #{inspect(result)}")
         {:ok, result}
       end)
     rescue
       err ->
-        Logger.debug("Repo.write() ERROR: #{inspect(err)}")
-        {:error, err}
-    end
-  end
-
-  @spec delete(Memento.Table.record()) :: {:ok, Memento.Table.record()} | {:error, any()}
-  def delete(model) do
-    try do
-      Memento.transaction!(fn ->
-        :ok = model |> Memento.Query.delete_record()
-        Logger.debug("Repo.delete() OK: #{inspect(model)}")
-        {:ok, model}
-      end)
-    rescue
-      err ->
-        Logger.debug("Repo.delete() ERROR: #{inspect(err)}")
+        Logger.debug("Repo.write(#{inspect(model.__struct__)}) ERROR: #{inspect(err)}")
         {:error, err}
     end
   end
@@ -96,28 +81,63 @@ defmodule LiveQchatex.Repo do
     try do
       Memento.transaction!(fn ->
         %{} = result = model |> Memento.Query.read(id)
-        Logger.debug("Repo.read() OK: #{inspect(result)}")
+        Logger.debug("Repo.read(#{inspect(model)}) OK: #{inspect(result)}")
         {:ok, result}
       end)
     rescue
       err ->
-        Logger.debug("Repo.read() ERROR: #{inspect(err)}")
+        Logger.debug("Repo.read(#{inspect(model)}) ERROR: #{inspect(err)}")
+        {:error, err}
+    end
+  end
+
+  @spec delete(Memento.Table.record()) :: {:ok, Memento.Table.record()} | {:error, any()}
+  def delete(model) do
+    try do
+      Memento.transaction!(fn ->
+        :ok = model |> Memento.Query.delete_record()
+        Logger.debug("Repo.delete(#{inspect(model.__struct__)}) OK: #{inspect(model)}")
+        {:ok, model}
+      end)
+    rescue
+      err ->
+        Logger.debug("Repo.delete(#{inspect(model.__struct__)}) ERROR: #{inspect(err)}")
+        {:error, err}
+    end
+  end
+
+  @spec delete_all(Memento.Table.name(), Tuple.t() | list(Tuple.t())) ::
+          {:ok, list(Memento.Table.record())} | {:error, any()}
+  def delete_all(model, guards \\ []) do
+    try do
+      Memento.transaction!(fn ->
+        results =
+          model
+          |> Memento.Query.select(guards)
+          |> Enum.filter(&(:ok == Memento.Query.delete_record(&1)))
+
+        Logger.debug("Repo.delete_all(#{inspect(model)}) OK: #{inspect(results)}")
+        {:ok, results}
+      end)
+    rescue
+      err ->
+        Logger.debug("Repo.delete_all(#{inspect(model)}) ERROR: #{inspect(err)}")
         {:error, err}
     end
   end
 
   @spec find(Memento.Table.name(), Tuple.t() | list(Tuple.t())) ::
           {:ok, list(Memento.Table.record())} | {:error, any()}
-  def find(model, guards \\ {}) do
+  def find(model, guards \\ []) do
     try do
       Memento.transaction!(fn ->
         result = model |> Memento.Query.select(guards)
-        Logger.debug("Repo.find() OK: #{inspect(result)}")
+        Logger.debug("Repo.find(#{inspect(model)}) OK: #{inspect(result)}")
         {:ok, result}
       end)
     rescue
       err ->
-        Logger.debug("Repo.find() ERROR: #{inspect(err)}")
+        Logger.debug("Repo.find(#{inspect(model)}) ERROR: #{inspect(err)}")
         {:error, err}
     end
   end
