@@ -3,20 +3,36 @@
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
-.container{
-  /* max-width: none;
-  text-align: center; */
-}
-
 .chat-room {
-  /* margin: 1em 5em;
-  min-width: 1024px;
-  text-align: center; */
+  margin: auto;
 }
 
-.chat-content {
+.chat-contents {
   display: inline-block;
   text-align: left;
+  width: 70%;
+}
+.chat-contents .messages-list {
+  list-style: none;
+  height: 400px;
+  overflow-y: scroll;
+  background-color: #e8e8e8;
+  padding: 5px 10px;
+  margin: auto;
+}
+.chat-contents form input {
+  margin: auto;
+}
+
+.chat-members {
+  display: inline-block;
+  text-align: left;
+  width: 25%;
+  vertical-align: top;
+  padding-left: 2%;
+}
+.chat-members .members-list {
+  padding: 5px;
 }
 
 .chat-id {
@@ -26,21 +42,6 @@
   color: #5cadf0;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.chat-members {
-  display: inline-block;
-  text-align: left;
-}
-
-.messages {
-  height: 400px;
-  overflow-y: scroll;
-  background-color: #e8e8e8;
-  padding: 5px;
-}
-.messages ul {
-  list-style: none;
 }
 
 .ellipsis:after {

@@ -20,9 +20,8 @@ liveSocket.connect()
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
 
-// Select the node that will be observed for mutations
-const targetNode = document.getElementsByClassName("messages")[0];
-if (targetNode) {
+// Select the nodes that will be observed for mutations
+Array.from(document.getElementsByClassName("scroll-on-update")).forEach((targetNode) => {
   document.addEventListener("DOMContentLoaded", () => {
     targetNode.scrollTop = targetNode.scrollHeight
   });
@@ -38,7 +37,7 @@ if (targetNode) {
   });
   // Start observing the target node for configured mutations
   observer.observe(targetNode, config);
-}
+});
 
 window.copyToClipboard = (str) => {
   const el = document.createElement("textarea");  // Create a <textarea> element

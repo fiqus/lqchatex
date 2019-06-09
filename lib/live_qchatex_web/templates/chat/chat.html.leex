@@ -9,46 +9,34 @@
 
 <h4>Socket ID: <%= @socket.id %></h4>
 
-<section class="row chat-room">
-  <div class="column chat-content">
-    <div class="list-group">
-      <div class="list-group-item active">
-        <h2><%= @chat.title %></h2>
-        <h4><b>Qchatex ID:</b><br/><span onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></span></h4>
-      </div>
-      <div class="list-group-item messages">
-        <ul>
-          <%=for message <- @messages do %>
-            <li>
-              <b><%= message.from_user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
-              <div><%= message.text %></div>
-            </li>
-          <% end %>
-        </ul>
-
-      </div>
-    </div>
-
-    <div class="form-group">
-      <form action="#send" phx-submit="message" phx-change="typing">
-        <%= text_input :message, :text, autocomplete: "off", placeholder: "#{@user.nickname}, write your message here..." %>
-        <%= hidden_input :message, :user_id, value: @user.id  %>
-        <%= hidden_input :message, :chat_id, value: @chat.id  %>
-        <%= submit "Send", phx_disable_with: "Sending..." %>
-      </form>
-    </div>
-  </div>
-  <div class="column chat-members list-group">
-    <ul>
-      <div class="list-group-item active">
-        <h3>Members</h3>
-      </div>
-      <div class="list-group-item">
-        <%= for user <- @members do %>
-          <p><%= user.nickname %><%= raw ellipsis(user.typing) %></p>
-        <% end %>
-      </div>
+<section class="chat-room">
+  <div class="chat-contents">
+    <h2><%= @chat.title %></h2>
+    <h4><b>Qchatex ID:</b><br/><span onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></span></h4>
+    <ul class="messages-list scroll-on-update">
+      <%=for message <- @messages do %>
+        <li>
+          <b><%= message.from_user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
+          <div><%= message.text %></div>
+        </li>
+      <% end %>
     </ul>
+
+    <form action="#send" phx-submit="message" phx-change="typing">
+      <%= text_input :message, :text, autocomplete: "off", placeholder: "#{@user.nickname}, write your message here..." %>
+      <%= hidden_input :message, :user_id, value: @user.id  %>
+      <%= hidden_input :message, :chat_id, value: @chat.id  %>
+      <%= submit "Send", phx_disable_with: "Sending..." %>
+    </form>
+  </div>
+
+  <div class="chat-members">
+    <h3>Members</h3>
+    <div class="members-list">
+      <%= for user <- @members do %>
+        <p><%= user.nickname %><%= raw ellipsis(user.typing) %></p>
+      <% end %>
+    </div>
   </div>
 </section>
 
