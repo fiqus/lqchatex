@@ -15,7 +15,7 @@ config :live_qchatex, LiveQchatexWeb.Endpoint,
   http: [:inet6, port: System.get_env("PORT") || 4000],
   # url: [host: "qchatex.fiqus.coop", port: System.get_env("PORT") || 80],
   url: [
-    host: System.get_env("APP_NAME") <> ".gigalixirapp.com",
+    host: nil,
     port: 443
   ],
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE"),
