@@ -3,14 +3,39 @@
 @import "./phoenix.css";
 @import "../../deps/phoenix_live_view/assets/css/live_view.css";
 
+body {
+  margin: auto 10px;
+}
+
+header h1 {
+  margin: auto;
+}
+header nav {
+  width: 200px;
+}
+header nav ul li {
+  text-align: left;
+}
+
+.main-logo {
+  min-width: 300px;
+  margin: auto;
+  display: block;
+  text-align: center;
+}
+.main-logo img {
+  width: 200px;
+}
+
 .chat-room {
   margin: auto;
+  flex-direction: row;
 }
 
 .chat-contents {
   display: inline-block;
   text-align: left;
-  width: 70%;
+  width: auto;
 }
 .chat-contents .messages-list {
   list-style: none;
@@ -27,7 +52,7 @@
 .chat-members {
   display: inline-block;
   text-align: left;
-  width: 25%;
+  width: auto;
   vertical-align: top;
   padding-left: 2%;
 }

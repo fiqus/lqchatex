@@ -6,6 +6,9 @@ The idea was to research and practice about [Phoenix LiveView](https://github.co
 [Live Qchatex](https://github.com/fiqus/lqchatex) is a very simple and quick chat engine that allows you to create and join chat rooms on-the-fly.  
 Don't need to register, just enter a nickname and you are ready to go!
 
+## Live running demo at: [https://lqchatex.fiqus.coop/](https://lqchatex.fiqus.coop/)  
+Powered by [gigalixir](https://gigalixir.com/).
+
 
 # Development
 ## Pre-requisites:
@@ -25,3 +28,6 @@ You can now visit [http://localhost:4000](http://localhost:4000) from your brows
 ## Test
   * `mix test` - run the tests
   * `mix coverage` - for test coverage
+
+## Mnesia
+  * `mix mnesia.reset` - remove the mnesia storage directory from disk

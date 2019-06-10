@@ -12,11 +12,14 @@
       <section class="container">
         <nav role="navigation">
           <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
+            <li><a href="<%= Routes.live_path(@conn, LiveQchatexWeb.LiveChat.Home) %>">Home</a></li>
+            <li><a href="https://github.com/fiqus/lqchatex" target="_blank">Repo</a></li>
+            <li><a href="https://fiqus.coop" target="_blank">Fiqus</a></li>
           </ul>
         </nav>
-        <a href="http://phoenixframework.org/" class="phx-logo">
-          <img src="<%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>
+        <h1>Live Qchatex</h1>
+        <a href="<%= Routes.live_path(@conn, LiveQchatexWeb.LiveChat.Home) %>" class="main-logo">
+          <img src="<%= Routes.static_path(@conn, "/images/fiqus-logo.png") %>" alt="Fiqus Logo"/>
         </a>
       </section>
     </header>
