@@ -21,6 +21,11 @@ config :live_qchatex, LiveQchatexWeb.Endpoint,
   secret_key_base: Map.fetch!(System.get_env(), "SECRET_KEY_BASE"),
   cache_static_manifest: "priv/static/cache_manifest.json"
 
+# Configures app timers in SECONDS
+config :live_qchatex, :timers,
+  cron_interval_clean_chats: 60 * 60,
+  cron_interval_clean_users: 60 * 30
+
 # Do not print debug messages in production
 config :logger, level: :info
 
@@ -67,4 +72,3 @@ config :logger, level: :info
 #
 # Then you can assemble a release by calling `mix release`.
 # See `mix help release` for more information.
-

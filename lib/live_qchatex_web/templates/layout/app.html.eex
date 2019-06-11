@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>LiveQchatex · Phoenix Framework</title>
+    <title>Live Qchatex · Elixir + Phoenix LiveView + PubSub + Mnesia + Memento · Fiqus.coop</title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
   <body>
@@ -14,7 +14,6 @@
           <ul>
             <li><a href="<%= Routes.live_path(@conn, LiveQchatexWeb.LiveChat.Home) %>">Home</a></li>
             <li><a href="https://github.com/fiqus/lqchatex" target="_blank">Repo</a></li>
-            <li><a href="https://fiqus.coop" target="_blank">Fiqus</a></li>
           </ul>
         </nav>
         <h1>Live Qchatex</h1>
@@ -27,6 +26,11 @@
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
       <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
       <%= render @view_module, @view_template, assigns %>
+      <section class="disclaimer">
+        <div><b>NOTE:</b> All chats, messages and users will be automatically deleted!</div>
+        <div>Chat rooms and all its messages after <b><%= timer_clean_chats() %></b> minutes without receiving new messages.</div>
+        <div>Users sessions will be purged after <b><%= timer_clean_users() %></b> minutes without writting/sending a message.</div>
+      </section>
     </main>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>

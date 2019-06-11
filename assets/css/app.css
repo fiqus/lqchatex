@@ -27,6 +27,18 @@ header nav ul li {
   width: 200px;
 }
 
+.phx-hero {
+  padding: 1em;
+  font-size: 100%;
+}
+.phx-hero p {
+  font-size: 90%;
+}
+
+.disclaimer {
+  font-size: 80%;
+}
+
 .chat-room {
   margin: auto;
   flex-direction: row;

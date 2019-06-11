@@ -4,10 +4,11 @@
 The idea was to research and practice about [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view) implementation and to play around a little with [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub/) sockets using [Mnesia](http://erlang.org/doc/apps/mnesia/) over [Memento](https://github.com/sheharyarn/memento) for storage.
 
 [Live Qchatex](https://github.com/fiqus/lqchatex) is a very simple and quick chat engine that allows you to create and join chat rooms on-the-fly.  
-Don't need to register, just enter a nickname and you are ready to go!
+Don't need to register, just enter a nickname and you are ready to go!  
+**NOTE:** All chats, messages and users are automatically deleted after a certain period of inactivity.
 
 ## Live running demo at: [https://lqchatex.fiqus.coop/](https://lqchatex.fiqus.coop/)  
-Powered by [gigalixir](https://gigalixir.com/).
+Hosted by [gigalixir](https://gigalixir.com/).
 
 
 # Development
