@@ -39,6 +39,12 @@ header nav ul li {
   font-size: 80%;
 }
 
+.alert-success {
+  color: #448f31;
+  background-color: #d9f7dd;
+  border-color: #bcf1c0;
+}
+
 .chat-room {
   margin: auto;
   flex-direction: row;

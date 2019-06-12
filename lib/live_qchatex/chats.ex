@@ -93,15 +93,15 @@ defmodule LiveQchatex.Chats do
   end
 
   @doc """
-  Adds a member to a chat.
+  Adds or updates a chat member.
   """
-  def add_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
+  def update_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
     {:ok, chat} =
       chat
       |> Map.put(:members, chat.members |> Map.put(user.id, Models.User.foreign_fields(user)))
       |> Repo.write()
 
-    Repo.broadcast(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
+    Repo.broadcast_all(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
     chat
   end
 
@@ -114,7 +114,7 @@ defmodule LiveQchatex.Chats do
       |> Map.put(:members, chat.members |> Map.delete(user.id))
       |> Repo.write()
 
-    Repo.broadcast(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
+    Repo.broadcast_all(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
     chat
   end
 

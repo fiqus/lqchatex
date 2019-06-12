@@ -7,7 +7,9 @@
   </article>
 </section>
 
+<%= if Mix.env() == :dev do %>
 <h4>Socket ID: <%= @socket.id %></h4>
+<% end %>
 
 <section class="chat-room">
   <div class="chat-contents">

@@ -23,8 +23,9 @@
       </section>
     </header>
     <main role="main" class="container">
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+      <p class="alert alert-info" role="alert"><%= raw get_flash(@conn, :info) %></p>
+      <p class="alert alert-success" role="alert"><%= raw get_flash(@conn, :success) %></p>
+      <p class="alert alert-danger" role="alert"><%= raw get_flash(@conn, :error) %></p>
       <%= render @view_module, @view_template, assigns %>
       <section class="disclaimer">
         <div><b>NOTE:</b> All chats, messages and users will be automatically deleted!</div>

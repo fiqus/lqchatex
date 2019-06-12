@@ -22,7 +22,9 @@
   </article>
 </section>
 
+<%= if Mix.env() == :dev do %>
 <h4>Socket ID: <%= @socket.id %></h4>
+<% end %>
 
 <section class="row">
   <article class="column">

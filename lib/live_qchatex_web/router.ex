@@ -7,6 +7,7 @@ defmodule LiveQchatexWeb.Router do
     plug :fetch_session
     plug :fetch_flash
     plug Phoenix.LiveView.Flash
+    plug :put_layout, {LiveQchatexWeb.LayoutView, :app}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug LiveQchatexWeb.Plug.SessionSetup

@@ -107,8 +107,15 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   def handle_event("message", %{"message" => data}, %{:assigns => assigns} = socket) do
     try do
-      {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, data["text"])
-      {:noreply, socket |> update_messages(message)}
+      case get_message_type(data["text"]) do
+        {:nickname, nick} ->
+          Logger.info("[#{socket.id}][chat-view] Changed nickname to: #{inspect(nick)}")
+          {:noreply, socket |> update_user(:nickname, nick)}
+
+        {:message, text} ->
+          {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, text)
+          {:noreply, socket |> update_messages(message)}
+      end
     rescue
       err ->
         Logger.error("Can't send the message #{inspect(err)}")
@@ -150,7 +157,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
     socket
     |> assign(user: user)
-    |> assign(chat: chat |> Chats.add_chat_member(user))
+    |> assign(chat: chat |> Chats.update_chat_member(user))
   end
 
   defp fetch(%{:assigns => %{:chat => chat}} = socket) do
@@ -176,6 +183,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> set_counter(key, counters[key] + amount)
   end
 
+  defp update_user(%{:assigns => %{:chat => chat, :user => user}} = socket, key, value) do
+    {:ok, user} = Chats.update_user(user, %{key => value})
+
+    socket
+    |> assign(user: user)
+    |> assign(chat: chat |> Chats.update_chat_member(user))
+  end
+
   defp update_messages(%{:assigns => %{:messages => messages}} = socket, message) do
     socket |> assign(:messages, messages ++ [message])
   end
@@ -184,24 +199,35 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> assign(:members, parse_members(members, user_id, is_typing))
   end
 
-  defp parse_members(members, user_id \\ nil, is_typing \\ false) do
-    members
-    |> Enum.map(&parse_member(&1, user_id, is_typing))
+  defp get_message_type(text) do
+    cond do
+      Regex.match?(~r/^\s*\/nick\s+(.*)/, text) ->
+        [_, nick] = Regex.run(~r/\/nick\s+(.*)/, text)
+        {:nickname, nick |> String.trim()}
+
+      true ->
+        {:message, text}
+    end
   end
 
-  defp parse_member({member_id, member}, user_id, is_typing),
+  defp parse_members(members, user_id \\ nil, is_typing \\ false) do
+    members
+    |> Enum.map(&update_member_field(&1, user_id, :typing, is_typing))
+  end
+
+  defp update_member_field({member_id, member}, user_id, key, value),
     do:
       member
       |> Map.put(
-        :typing,
+        key,
         if(user_id == nil || user_id == member_id,
-          do: is_typing,
-          else: Map.get(member, :typing, false)
+          do: value,
+          else: Map.get(member, key, value)
         )
       )
 
-  defp parse_member(%{:id => id} = member, user_id, is_typing),
-    do: parse_member({id, member}, user_id, is_typing)
+  defp update_member_field(%{:id => id} = member, user_id, key, value),
+    do: update_member_field({id, member}, user_id, key, value)
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}
 end
