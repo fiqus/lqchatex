@@ -110,7 +110,13 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       case get_message_type(data["text"]) do
         {:nickname, nick} ->
           Logger.info("[#{socket.id}][chat-view] Changed nickname to: #{inspect(nick)}")
-          {:noreply, socket |> update_user(:nickname, nick)}
+          message = "Renamed from #{inspect(assigns.user.nickname)} to #{inspect(nick)}"
+
+          handle_event(
+            "message",
+            %{"message" => %{"text" => message}},
+            socket |> update_user(:nickname, nick)
+          )
 
         {:message, text} ->
           {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, text)
