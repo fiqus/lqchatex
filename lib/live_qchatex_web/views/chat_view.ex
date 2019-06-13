@@ -1,6 +1,15 @@
 defmodule LiveQchatexWeb.ChatView do
   use LiveQchatexWeb, :view
 
+  def parse_member(member, user) do
+    {class} = if member.id == user.id do
+      {"myself"}
+    else
+      {""}
+    end
+    ~s(<p class="#{class}">#{member.nickname}#{ellipsis member.typing}</p>)
+  end
+
   def ellipsis(true), do: "<span class=\"ellipsis\"></span>"
   def ellipsis(false), do: nil
 

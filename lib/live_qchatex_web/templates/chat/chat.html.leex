@@ -35,9 +35,7 @@
   <div class="chat-members">
     <h3>Members</h3>
     <div class="members-list">
-      <%= for member <- @members do %>
-        <p class="<%= if member.id == @user.id, do: "myself" %>"><%= member.nickname %><%= raw ellipsis(member.typing) %></p>
-      <% end %>
+      <%= for member <- @members, do: raw parse_member(member, @user) %>
     </div>
   </div>
 </section>
