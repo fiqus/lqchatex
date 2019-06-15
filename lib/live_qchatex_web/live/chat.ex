@@ -109,14 +109,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     try do
       case get_message_type(data["text"]) do
         {:nickname, nick} ->
-          Logger.info("[#{socket.id}][chat-view] Changed nickname to: #{inspect(nick)}")
-          message = "Renamed from #{inspect(assigns.user.nickname)} to #{inspect(nick)}"
-
-          handle_event(
-            "message",
-            %{"message" => %{"text" => message}},
-            socket |> update_user(:nickname, nick)
-          )
+          socket |> maybe_update_nickname(nick)
 
         {:message, text} ->
           {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, text)
@@ -149,6 +142,21 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
         Logger.error("Can't update typing status #{inspect(err)}")
         {:noreply, socket}
     end
+  end
+
+  def handle_event("update_nickname", %{"nick" => nick}, socket) do
+    socket
+    |> assign(click: nil)
+    |> maybe_update_nickname(nick)
+  end
+
+  def handle_event("click", data, socket) do
+    {:noreply, socket |> assign(:click, data)}
+  end
+
+  def handle_event(event, data, socket) do
+    Logger.warn("[#{socket.id}][chat-view] UNHANDLED EVENT '#{event}': #{inspect(data)}")
+    {:noreply, socket}
   end
 
   defp maybe_cancel_typing_timer(nil), do: :ignore
@@ -203,6 +211,28 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   defp update_typing(%{:assigns => %{:members => members}} = socket, user_id, is_typing) do
     socket |> assign(:members, parse_members(members, user_id, is_typing))
+  end
+
+  defp update_nickname(%{:assigns => %{:user => user}} = socket, nick) do
+    Logger.debug("[#{socket.id}][chat-view] Changed nickname to: #{inspect(nick)}")
+    message = "Renamed from #{inspect(user.nickname)} to #{inspect(nick)}"
+
+    handle_event(
+      "message",
+      %{"message" => %{"text" => message}},
+      socket |> update_user(:nickname, nick)
+    )
+  end
+
+  defp maybe_update_nickname(%{:assigns => %{:user => user}} = socket, nick) do
+    nick = nick |> String.trim()
+
+    if user.nickname != nick and nick |> String.length() > 0 do
+      socket |> update_nickname(nick)
+    else
+      # socket |> response_error("The nickname is not valid!")
+      {:noreply, socket}
+    end
   end
 
   defp get_message_type(text) do

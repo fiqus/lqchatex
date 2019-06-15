@@ -35,24 +35,19 @@
   <div class="chat-members">
     <h3>Members</h3>
     <div class="members-list">
-      <%= for member <- @members, do: raw parse_member(member, @user) %>
+      <%= for member <- @members, do: raw parse_member(assigns, @user, member) %>
     </div>
   </div>
 </section>
 
-<%= if @success do %>
-  <p class="alert alert-success" role="success"><%= @success %></p>
-<% end %>
-<%= if @error do %>
-  <p class="alert alert-danger" role="alert"><%= @error %></p>
-<% end %>
-<%= if @info do %>
-  <p class="alert alert-info" role="alert"><%= @info %></p>
-<% end %>
-
-<%= if @error do %>
-<section class="row">
-    <article class="phx-error"><%= @error %></article>
-    <!--article class="column" phx-click="remove" phx-value="<%= @chat.id %>">REMOVE</article-->
+<section class="status-messages">
+  <%= if @success do %>
+    <p class="alert alert-success" role="alert"><%= raw @success %></p>
+  <% end %>
+  <%= if @error do %>
+    <p class="alert alert-danger" role="alert"><%= raw @error %></p>
+  <% end %>
+  <%= if @info do %>
+    <p class="alert alert-info" role="alert"><%= raw @info %></p>
+  <% end %>
 </section>
-<% end %>

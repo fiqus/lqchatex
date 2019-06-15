@@ -77,6 +77,19 @@ header nav ul li {
 .chat-members .members-list {
   padding: 5px;
 }
+.chat-members .members-list form,
+.chat-members .members-list input {
+  margin: auto;
+}
+.chat-members .members-list input,
+.chat-members .members-list p {
+  width: 100px;
+  height: 25px;
+}
+.chat-members .members-list p:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
 .chat-members .members-list .myself {
   font-weight: bold;
 }
@@ -88,6 +101,12 @@ header nav ul li {
   color: #5cadf0;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.status-messages {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
 
 .ellipsis:after {

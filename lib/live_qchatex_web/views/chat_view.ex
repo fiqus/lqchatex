@@ -1,13 +1,23 @@
 defmodule LiveQchatexWeb.ChatView do
   use LiveQchatexWeb, :view
 
-  def parse_member(member, user) do
-    {class} = if member.id == user.id do
-      {"myself"}
+  def parse_member(assigns, user, member) do
+    {class, click, title} =
+      if member.id == user.id do
+        {"myself", "show_input_nickname", "Click to change your nick!"}
+      else
+        {"member", "", "SOON: Click to send private message!"}
+      end
+
+    if member.id == user.id && Map.get(assigns, :click) == "show_input_nickname" do
+      ~s(<form action="#send" phx-submit="update_nickname">
+        <p><input type="text" name="nick" value="#{member.nickname}" maxlength="20"/></p>
+      </form>)
     else
-      {""}
+      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}">#{
+        member.nickname
+      }#{ellipsis(member.typing)}</p>)
     end
-    ~s(<p class="#{class}">#{member.nickname}#{ellipsis member.typing}</p>)
   end
 
   def ellipsis(true), do: "<span class=\"ellipsis\"></span>"
