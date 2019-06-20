@@ -79,7 +79,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
   defp redirect_to_chat(socket, chat) do
     {:stop,
      socket
-     |> redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Chat, chat.id))}
+     |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Chat, chat.id))}
   end
 
   defp fetch_user(socket, sid) do
