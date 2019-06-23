@@ -5,12 +5,22 @@ defmodule LiveQchatex.Chats do
 
   alias LiveQchatex.Repo
   alias LiveQchatex.Models
+  alias LiveQchatex.Presence
 
   @topic inspect(__MODULE__)
 
-  def subscribe, do: subscribe(@topic)
-  def subscribe(%Models.Chat{} = chat), do: subscribe("#{@topic}/#{chat.id}")
+  def topic, do: @topic
+  def topic(%Models.Chat{} = chat), do: "#{@topic}/#{chat.id}"
+
+  def subscribe, do: topic() |> subscribe()
+  def subscribe(%Models.Chat{} = chat), do: chat |> topic() |> subscribe()
   def subscribe(topic), do: Repo.subscribe(topic)
+
+  def track(%Models.Chat{} = chat, %Models.User{} = user) do
+    subscribe()
+    subscribe(chat)
+    Presence.track_presence(self(), topic(chat), user.id, user |> Map.put(:typing, false))
+  end
 
   @doc """
   Updates the last_activity of a given Memento.Table.record().
@@ -67,8 +77,7 @@ defmodule LiveQchatex.Chats do
       id: Repo.random_string(64),
       title: "Untitled qchatex!",
       last_activity: now,
-      created_at: now,
-      members: %{}
+      created_at: now
     }
     |> write_chat_attrs(attrs)
     |> Repo.broadcast_event(@topic, [:chat, :created])
@@ -90,32 +99,6 @@ defmodule LiveQchatex.Chats do
     chat
     |> write_chat_attrs(attrs)
     |> Repo.broadcast_event(@topic, [:chat, :updated])
-  end
-
-  @doc """
-  Adds or updates a chat member.
-  """
-  def update_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
-    {:ok, chat} =
-      chat
-      |> Map.put(:members, chat.members |> Map.put(user.id, Models.User.foreign_fields(user)))
-      |> Repo.write()
-
-    Repo.broadcast_all(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
-    chat
-  end
-
-  @doc """
-  Removes a member from a chat.
-  """
-  def remove_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
-    {:ok, chat} =
-      chat
-      |> Map.put(:members, chat.members |> Map.delete(user.id))
-      |> Repo.write()
-
-    Repo.broadcast_all(chat.members, "#{@topic}/#{chat.id}", [:chat, :members_updated])
-    chat
   end
 
   @doc """
@@ -249,9 +232,18 @@ defmodule LiveQchatex.Chats do
     )
   end
 
-  def broadcast_user_typing(chat_id, user_id, is_typing) do
-    user_id
-    |> Repo.broadcast_all("#{@topic}/#{chat_id}", [:user, :typing, is_typing])
+  def list_chat_members(chat) do
+    topic(chat)
+    |> Presence.list_presences()
+  end
+
+  def update_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
+    Presence.update_presence(self(), topic(chat), user.id, user)
+    chat
+  end
+
+  def update_member_typing(chat, user, is_typing) do
+    Presence.update_presence(self(), topic(chat), user.id, %{typing: is_typing})
   end
 
   def utc_now(), do: DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_unix()

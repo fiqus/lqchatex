@@ -47,11 +47,11 @@ header nav ul li {
 
 .chat-room {
   margin: auto;
-  flex-direction: row;
+  display: table;
 }
 
 .chat-contents {
-  display: inline-block;
+  display: table-cell;
   text-align: left;
   width: auto;
 }
@@ -68,11 +68,12 @@ header nav ul li {
 }
 
 .chat-members {
-  display: inline-block;
+  display: table-cell;
   text-align: left;
   width: auto;
   vertical-align: top;
   padding-left: 2%;
+  white-space: nowrap;
 }
 .chat-members .members-list {
   padding: 5px;

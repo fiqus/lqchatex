@@ -1,7 +1,7 @@
 # Live Qchatex
 ## Open sourced web application done by [Fiqus](https://fiqus.coop) for educational purposes.
 
-The idea was to research and practice about [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view) implementation and to play around a little with [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub/) sockets using [Mnesia](http://erlang.org/doc/apps/mnesia/) over [Memento](https://github.com/sheharyarn/memento) for storage.
+The idea was to research and practice about [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view) implementation and to play around a little with [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub/) + [Presence](https://hexdocs.pm/phoenix/Phoenix.Presence.html) for sockets, using [Memento](https://github.com/sheharyarn/memento) as [Elixir](https://elixir-lang.org/) wrapper to [Erlang Mnesia](http://erlang.org/doc/apps/mnesia/) for temporal data storage.
 
 [Live Qchatex](https://github.com/fiqus/lqchatex) is a very simple and quick chat engine that allows you to create and join chat rooms on-the-fly.  
 Don't need to register, just enter a nickname and you are ready to go!  

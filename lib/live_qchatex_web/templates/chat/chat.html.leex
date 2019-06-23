@@ -33,7 +33,7 @@
   </div>
 
   <div class="chat-members">
-    <h3>Members</h3>
+    <h3>Members: <%= length(@members)%></h3>
     <div class="members-list">
       <%= for member <- @members, do: raw parse_member(assigns, @user, member) %>
     </div>

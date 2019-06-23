@@ -8,14 +8,13 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   def mount(%{sid: sid, path_params: %{"id" => id}}, socket) do
     try do
-      socket = socket |> fetch_chat!(id)
+      socket = socket |> fetch_chat!(id) |> fetch_user(sid)
 
       if connected?(socket) do
-        Chats.subscribe()
-        Chats.subscribe(socket.assigns.chat)
+        Chats.track(socket.assigns.chat, socket.assigns.user)
       end
 
-      {:ok, socket |> fetch_user(sid) |> fetch()}
+      {:ok, socket |> fetch()}
     rescue
       err ->
         Logger.error("Can't mount the chat #{inspect(err)}")
@@ -48,15 +47,6 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> set_counter(:chats, counter)}
   end
 
-  def handle_info({[:chat, :members_updated], members} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE MEMBERS UPDATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    chat = socket.assigns.chat |> Map.put(:members, members)
-    {:noreply, socket |> assign(chat: chat, members: parse_members(members))}
-  end
-
   def handle_info({[:user, :created], _user} = info, socket) do
     Logger.debug("[#{socket.id}][chat-view] HANDLE USER CREATED: #{inspect(info)}",
       ansi_color: :magenta
@@ -78,18 +68,9 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       ansi_color: :magenta
     )
 
-    %{:chat => %{:id => chat_id}, :user => %{:id => user_id} = user} = socket.assigns
-    {:ok, _} = Chats.update_last_activity(user)
-    :ok = Chats.broadcast_user_typing(chat_id, user_id, false)
+    {:ok, _} = Chats.update_last_activity(socket.assigns.user)
+    Chats.update_member_typing(socket.assigns.chat, socket.assigns.user, false)
     {:noreply, socket}
-  end
-
-  def handle_info({[:user, :typing, is_typing], user_id} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING #{is_typing}: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> update_typing(user_id, is_typing)}
   end
 
   def handle_info({[:message, :created], message} = info, socket) do
@@ -100,9 +81,42 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> update_messages(message)}
   end
 
+  def handle_info(%{event: "presence_diff", payload: payload}, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply,
+     socket
+     |> handle_member_joins(payload.joins)
+     |> handle_member_leaves(payload.leaves)
+     |> update_members()}
+  end
+
   def handle_info(info, socket) do
     Logger.warn("[#{socket.id}][chat-view] UNHANDLED INFO: #{inspect(info)}")
     {:noreply, socket}
+  end
+
+  def handle_event("typing", _data, socket) do
+    try do
+      Chats.update_member_typing(socket.assigns.chat, socket.assigns.user, true)
+
+      Map.get(socket.assigns, :typing_timer, nil) |> maybe_cancel_typing_timer()
+
+      timer_ref =
+        Process.send_after(
+          self(),
+          {[:user, :typing, :end]},
+          Application.get_env(:live_qchatex, :timers)[:user_typing_timeout] * 1000
+        )
+
+      {:noreply, socket |> assign(:typing_timer, timer_ref)}
+    rescue
+      err ->
+        Logger.error("Can't update typing status #{inspect(err)}")
+        {:noreply, socket}
+    end
   end
 
   def handle_event("message", %{"message" => data}, %{:assigns => assigns} = socket) do
@@ -122,28 +136,6 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     end
   end
 
-  def handle_event("typing", _data, socket) do
-    try do
-      %{:chat => %{:id => chat_id}, :user => %{:id => user_id}} = socket.assigns
-      :ok = Chats.broadcast_user_typing(chat_id, user_id, true)
-
-      Map.get(socket.assigns, :typing_timer, nil) |> maybe_cancel_typing_timer()
-
-      timer_ref =
-        Process.send_after(
-          self(),
-          {[:user, :typing, :end]},
-          Application.get_env(:live_qchatex, :timers)[:user_typing_timeout] * 1000
-        )
-
-      {:noreply, socket |> assign(:typing_timer, timer_ref)}
-    rescue
-      err ->
-        Logger.error("Can't update typing status #{inspect(err)}")
-        {:noreply, socket}
-    end
-  end
-
   def handle_event("update_nickname", %{"nick" => nick}, socket) do
     socket
     |> assign(click: nil)
@@ -159,6 +151,20 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket}
   end
 
+  defp handle_member_joins(socket, _joins) do
+    # members = joins
+    # |> Map.values
+    # |> Enum.map(&(&1.metas |> List.first()))
+    socket
+  end
+
+  defp handle_member_leaves(socket, _leaves) do
+    # embers = leaves
+    # |> Map.values
+    # |> Enum.map(&(&1.metas |> List.first()))
+    socket
+  end
+
   defp maybe_cancel_typing_timer(nil), do: :ignore
   defp maybe_cancel_typing_timer(typing_timer), do: Process.cancel_timer(typing_timer)
 
@@ -166,18 +172,15 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> assign(chat: Chats.get_chat!(id))
   end
 
-  defp fetch_user(%{:assigns => %{:chat => chat}} = socket, sid) do
+  defp fetch_user(socket, sid) do
     {:ok, %Models.User{} = user} = Chats.get_or_create_user(sid)
-
-    socket
-    |> assign(user: user)
-    |> assign(chat: chat |> Chats.update_chat_member(user))
+    socket |> assign(user: user)
   end
 
   defp fetch(%{:assigns => %{:chat => chat}} = socket) do
     socket
+    |> update_members()
     |> assign(
-      members: parse_members(chat.members),
       messages: Chats.get_messages(chat),
       counters: %{
         chats: Chats.count_chats(),
@@ -205,12 +208,12 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     |> assign(chat: chat |> Chats.update_chat_member(user))
   end
 
-  defp update_messages(%{:assigns => %{:messages => messages}} = socket, message) do
-    socket |> assign(:messages, messages ++ [message])
+  defp update_members(%{assigns: %{chat: chat}} = socket) do
+    socket |> assign(members: chat |> Chats.list_chat_members())
   end
 
-  defp update_typing(%{:assigns => %{:members => members}} = socket, user_id, is_typing) do
-    socket |> assign(:members, parse_members(members, user_id, is_typing))
+  defp update_messages(%{:assigns => %{:messages => messages}} = socket, message) do
+    socket |> assign(:messages, messages ++ [message])
   end
 
   defp update_nickname(%{:assigns => %{:user => user}} = socket, nick) do
@@ -245,25 +248,6 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
         {:message, text}
     end
   end
-
-  defp parse_members(members, user_id \\ nil, is_typing \\ false) do
-    members
-    |> Enum.map(&update_member_field(&1, user_id, :typing, is_typing))
-  end
-
-  defp update_member_field({member_id, member}, user_id, key, value),
-    do:
-      member
-      |> Map.put(
-        key,
-        if(user_id == nil || user_id == member_id,
-          do: value,
-          else: Map.get(member, key, value)
-        )
-      )
-
-  defp update_member_field(%{:id => id} = member, user_id, key, value),
-    do: update_member_field({id, member}, user_id, key, value)
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}
 end

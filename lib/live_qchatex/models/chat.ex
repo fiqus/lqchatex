@@ -3,7 +3,7 @@ defmodule LiveQchatex.Models.Chat do
   Chat model module.
   """
   use Memento.Table,
-    attributes: [:id, :socket_id, :title, :last_activity, :created_at, :members],
+    attributes: [:id, :socket_id, :title, :last_activity, :created_at],
     index: [:socket_id, :last_activity, :created_at],
     type: :ordered_set
 
@@ -15,7 +15,6 @@ defmodule LiveQchatex.Models.Chat do
           socket_id: nil | String.t(),
           title: String.t(),
           last_activity: Integer.t(),
-          created_at: DateTime.t(),
-          members: Map.t()
+          created_at: DateTime.t()
         }
 end

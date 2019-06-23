@@ -14,14 +14,19 @@ defmodule LiveQchatexWeb.ChatView do
         <p><input type="text" name="nick" value="#{member.nickname}" maxlength="20"/></p>
       </form>)
     else
-      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}">#{
-        member.nickname
-      }#{ellipsis(member.typing)}</p>)
+      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}" style="color:#{
+        member_color(member.id)
+      }">#{member.nickname}#{ellipsis(member.typing)}</p>)
     end
   end
 
   def ellipsis(true), do: "<span class=\"ellipsis\"></span>"
   def ellipsis(false), do: nil
+
+  # @TODO Improve colours!
+  def member_color(id) do
+    "##{id |> Base.encode16() |> binary_part(0, 6)}"
+  end
 
   def parse_timestamp(ts) when is_integer(ts) do
     {:ok, %DateTime{hour: hour, minute: minute, second: second}} = DateTime.from_unix(ts)
