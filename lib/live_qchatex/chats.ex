@@ -63,18 +63,19 @@ defmodule LiveQchatex.Chats do
 
   ## Examples
 
-      iex> create_chat(%{field: value})
+      iex> create_chat(%Models.User{id: "..."}, %{field: value})
       {:ok, %Chat{}}
 
-      iex> create_chat(%{field: bad_value})
+      iex> create_chat(%Models.User{id: "..."}, %{field: bad_value})
       {:error, any()}
 
   """
-  def create_chat(attrs \\ %{}) do
+  def create_chat(%Models.User{} = user, attrs \\ %{}) do
     now = utc_now()
 
     %Models.Chat{
       id: Repo.random_string(64),
+      user_id: user.id,
       title: "Untitled qchatex!",
       last_activity: now,
       created_at: now
@@ -143,8 +144,10 @@ defmodule LiveQchatex.Chats do
     chat
     |> Repo.write(
       attrs
+      |> sanitize_attrs()
       # @TODO Improve this!
       |> Repo.to_atom_map()
+      |> remove_empty(:user_id)
       |> remove_empty(:title)
       |> remove_empty(:last_activity)
       |> remove_empty(:created_at)
@@ -226,6 +229,7 @@ defmodule LiveQchatex.Chats do
     user
     |> Repo.write(
       attrs
+      |> sanitize_attrs()
       # @TODO Improve this!
       |> Repo.to_atom_map()
       |> remove_empty(:nickname)
@@ -253,39 +257,34 @@ defmodule LiveQchatex.Chats do
     messages
   end
 
-  def create_room_message(chat, from_user, text) do
-    {:ok, %{:id => chat_id}} = update_last_activity(chat)
+  def create_message(chat, from_user, text) do
+    {:ok, _} = update_last_activity(chat)
 
-    %Models.Message{chat_id: chat_id, from_user: from_user, text: text}
-    |> create_message()
-  end
-
-  def create_private_message(from_user, to_user, text) do
-    {:ok, _} = update_last_activity(from_user)
-
-    %Models.Message{from_user: from_user, to_user: to_user, text: text}
-    |> create_message()
-  end
-
-  defp create_message(%Models.Message{} = message) do
-    message
+    %Models.Message{chat_id: chat.id, text: text}
     |> Map.put(
       :from_user,
-      foreign_fields(&Models.User.foreign_fields/1, message.from_user)
-    )
-    |> Map.put(
-      :to_user,
-      foreign_fields(&Models.User.foreign_fields/1, message.to_user)
+      foreign_fields(&Models.User.foreign_fields/1, from_user)
     )
     |> Map.put(:timestamp, utc_now())
     |> Repo.write()
-    |> Repo.broadcast_event("#{@topic}/#{message.chat_id}", [:message, :created])
+    |> Repo.broadcast_event("#{@topic}/#{chat.id}", [:message, :created])
   end
 
   defp foreign_fields(_, nil), do: nil
   defp foreign_fields(func, data), do: func.(data)
 
   ######## HELPERS ########
+
+  defp sanitize_attrs(attrs) do
+    attrs
+    |> Enum.map(fn
+      {k, v} when is_binary(v) ->
+        {k, v |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()}
+
+      a ->
+        a
+    end)
+  end
 
   defp remove_empty(attrs, field) do
     if Map.get(attrs, field, "") |> empty_value?(),

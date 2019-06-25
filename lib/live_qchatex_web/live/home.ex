@@ -54,8 +54,8 @@ defmodule LiveQchatexWeb.LiveChat.Home do
 
   def handle_event("start", %{"chat" => cdata, "user" => udata}, socket) do
     try do
-      {:ok, chat} = Chats.create_chat(cdata)
-      {:ok, _user} = Chats.update_user(socket.assigns.user, udata)
+      {:ok, user} = Chats.update_user(socket.assigns.user, udata)
+      {:ok, chat} = Chats.create_chat(user, cdata)
       redirect_to_chat(socket, chat)
     rescue
       err ->

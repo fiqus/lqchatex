@@ -13,13 +13,13 @@
 
 <section class="chat-room">
   <div class="chat-contents">
-    <h2><%= @chat.title %></h2>
+    <h2><%= raw parse_title(assigns, @chat, @user) %></h2>
     <h4><b>Qchatex ID:</b><br/><span onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></span></h4>
     <ul class="messages-list scroll-on-update">
       <%=for message <- @messages do %>
         <li>
           <b><%= message.from_user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
-          <div><%= message.text %></div>
+          <div class="message-text"><%= message.text %></div>
         </li>
       <% end %>
     </ul>
@@ -35,7 +35,7 @@
   <div class="chat-members">
     <h3>Members: <%= length(@members)%></h3>
     <div class="members-list">
-      <%= for member <- @members, do: raw parse_member(assigns, @user, member) %>
+      <%= for member <- @members, do: raw parse_member(assigns, @chat, @user, member) %>
     </div>
   </div>
 </section>

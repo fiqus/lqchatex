@@ -1,13 +1,26 @@
 defmodule LiveQchatexWeb.ChatView do
   use LiveQchatexWeb, :view
 
-  def parse_member(assigns, user, member) do
+  def parse_title(assigns, chat, user) do
     {class, click, title} =
-      if member.id == user.id do
-        {"myself", "show_input_nickname", "Click to change your nick!"}
-      else
-        {"member", "", "SOON: Click to send private message!"}
-      end
+      if chat.user_id == user.id,
+        do: {"chat-owner", "show_input_title", "Click to change the title!"},
+        else: {"", "", ""}
+
+    if Map.get(assigns, :click) == "show_input_title" do
+      ~s(<form action="#send" phx-submit="update_title">
+        <span><input type="text" name="title" value="#{chat.title}" maxlength="100"/></span>
+      </form>)
+    else
+      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}">#{chat.title}</p>)
+    end
+  end
+
+  def parse_member(assigns, chat, user, member) do
+    {class, click, title} =
+      if member.id == user.id,
+        do: {"myself", "show_input_nickname", "Click to change your nick!"},
+        else: {"member", "", "SOON: Click to send private message!"}
 
     if member.id == user.id && Map.get(assigns, :click) == "show_input_nickname" do
       ~s(<form action="#send" phx-submit="update_nickname">
@@ -16,7 +29,7 @@ defmodule LiveQchatexWeb.ChatView do
     else
       ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}" style="color:#{
         member_color(member.id)
-      }">#{member.nickname}#{ellipsis(member.typing)}</p>)
+      }">#{parse_member_nickname(chat, member)}</p>)
     end
   end
 
@@ -41,4 +54,12 @@ defmodule LiveQchatexWeb.ChatView do
       |> Enum.map(&to_string/1)
       |> Enum.map(&String.pad_leading(&1, 2, "0"))
       |> Enum.join(glue)
+
+  defp parse_member_nickname(chat, member) do
+    nick = "#{member.nickname}#{ellipsis(member.typing)}"
+
+    if chat.user_id == member.id,
+      do: "<span title=\"Chat owner\">*</span> " <> nick,
+      else: nick
+  end
 end

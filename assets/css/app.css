@@ -63,6 +63,9 @@ header nav ul li {
   padding: 5px 10px;
   margin: auto;
 }
+.chat-contents .messages-list .message-text {
+  white-space: pre-wrap;
+}
 .chat-contents form input {
   margin: auto;
 }
@@ -98,6 +101,7 @@ header nav ul li {
 .chat-id {
   font-size: 16px;
 }
+.chat-owner:hover,
 .chat-id:hover {
   color: #5cadf0;
   text-decoration: underline;

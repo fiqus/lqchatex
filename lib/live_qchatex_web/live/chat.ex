@@ -39,6 +39,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> update_counter(:chats, 1)}
   end
 
+  def handle_info({[:chat, :updated], chat} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT UPDATED: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> assign(chat: chat)}
+  end
+
   def handle_info({[:chat, :cleared], counter} = info, socket) do
     Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT CLEARED: #{inspect(info)}",
       ansi_color: :magenta
@@ -126,8 +134,11 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
           socket |> maybe_update_nickname(nick)
 
         {:message, text} ->
-          {:ok, message} = Chats.create_room_message(assigns.chat, assigns.user, text)
+          {:ok, message} = Chats.create_message(assigns.chat, assigns.user, text)
           {:noreply, socket |> update_messages(message)}
+
+        _ ->
+          {:noreply, socket}
       end
     rescue
       err ->
@@ -140,6 +151,12 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket
     |> assign(click: nil)
     |> maybe_update_nickname(nick)
+  end
+
+  def handle_event("update_title", %{"title" => title}, socket) do
+    socket
+    |> assign(click: nil)
+    |> maybe_update_title(title)
   end
 
   def handle_event("click", data, socket) do
@@ -200,6 +217,12 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> set_counter(key, counters[key] + amount)
   end
 
+  defp update_chat(%{:assigns => %{:chat => chat}} = socket, key, value) do
+    {:ok, chat} = Chats.update_chat(chat, %{key => value})
+
+    socket |> assign(chat: chat)
+  end
+
   defp update_user(%{:assigns => %{:chat => chat, :user => user}} = socket, key, value) do
     {:ok, user} = Chats.update_user(user, %{key => value})
 
@@ -238,14 +261,39 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     end
   end
 
+  defp update_title(%{:assigns => %{:chat => chat}} = socket, title) do
+    Logger.debug("[#{socket.id}][chat-view] Changed title to: #{inspect(title)}")
+    message = "Changed chat title from #{inspect(chat.title)} to #{inspect(title)}"
+
+    handle_event(
+      "message",
+      %{"message" => %{"text" => message}},
+      socket |> update_chat(:title, title)
+    )
+  end
+
+  defp maybe_update_title(%{:assigns => %{:chat => chat, :user => user}} = socket, title) do
+    title = title |> String.trim()
+
+    if chat.user_id == user.id && chat.title != title and title |> String.length() > 0 do
+      socket |> update_title(title)
+    else
+      # socket |> response_error("The title is not valid!")
+      {:noreply, socket}
+    end
+  end
+
   defp get_message_type(text) do
     cond do
       Regex.match?(~r/^\s*\/nick\s+(.*)/, text) ->
         [_, nick] = Regex.run(~r/\/nick\s+(.*)/, text)
         {:nickname, nick |> String.trim()}
 
-      true ->
+      String.trim(text) != "" ->
         {:message, text}
+
+      true ->
+        {:ignore, text}
     end
   end
 

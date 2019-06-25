@@ -6,21 +6,28 @@ defmodule LiveQchatex.ChatsTest do
 
   describe "Chats module" do
     @chat_valid_attrs %{title: "some title", last_activity: 1, created_at: 1}
-    @chat_update_attrs %{title: "some updated title", last_activity: 10, created_at: 10}
+    @chat_update_attrs %{
+      title: "some updated title",
+      user_id: "another_user",
+      last_activity: 10,
+      created_at: 10
+    }
     @user_sid "user-session-id"
-    @user_valid_attrs %{nickname: "testnick", last_activity: 1, created_at: 1}
+    @user_valid_attrs %{id: "some_id", nickname: "testnick", last_activity: 1, created_at: 1}
 
     def chat_fixture(attrs \\ %{}) do
       {:ok, chat} =
-        attrs
-        |> Enum.into(@chat_valid_attrs)
-        |> Chats.create_chat()
+        Chats.create_chat(
+          %Models.User{id: "some_user"},
+          attrs
+          |> Enum.into(@chat_valid_attrs)
+        )
 
       chat
     end
 
     def message_fixture(%Models.Chat{} = chat, from_user \\ %Models.User{}) do
-      {:ok, message} = Chats.create_room_message(chat, from_user, "Test message!")
+      {:ok, message} = Chats.create_message(chat, from_user, "Test message!")
       message
     end
 
@@ -36,21 +43,26 @@ defmodule LiveQchatex.ChatsTest do
 
     test "create_chat/1 with empty data creates a chat with its defaults" do
       now = Chats.utc_now()
-      assert {:ok, %Models.Chat{} = chat} = Chats.create_chat()
+      user = %Models.User{id: "123"}
+      assert {:ok, %Models.Chat{} = chat} = Chats.create_chat(user)
+      assert chat.user_id == user.id
       assert chat.title == "Untitled qchatex!"
       assert chat.last_activity <= now
       assert chat.created_at <= now
 
       assert {:ok, %Models.Chat{} = chat} =
-               Chats.create_chat(%{"title" => "", "last_activity" => "", "created_at" => ""})
+               Chats.create_chat(user, %{"title" => "", "last_activity" => "", "created_at" => ""})
 
+      assert chat.user_id == user.id
       assert chat.title == "Untitled qchatex!"
       assert chat.last_activity <= now
       assert chat.created_at <= now
     end
 
     test "create_chat/1 with valid data creates a chat" do
-      assert {:ok, %Models.Chat{} = chat} = Chats.create_chat(@chat_valid_attrs)
+      user = %Models.User{id: "123"}
+      assert {:ok, %Models.Chat{} = chat} = Chats.create_chat(user, @chat_valid_attrs)
+      assert chat.user_id == user.id
       assert chat.title == @chat_valid_attrs.title
       assert chat.last_activity == @chat_valid_attrs.last_activity
     end
@@ -58,6 +70,7 @@ defmodule LiveQchatex.ChatsTest do
     test "update_chat/2 with valid data updates the chat" do
       chat = chat_fixture()
       assert {:ok, %Models.Chat{} = chat} = Chats.update_chat(chat, @chat_update_attrs)
+      assert chat.user_id == @chat_update_attrs.user_id
       assert chat.title == @chat_update_attrs.title
       assert chat.last_activity == @chat_update_attrs.last_activity
     end
