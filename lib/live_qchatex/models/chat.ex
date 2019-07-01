@@ -3,8 +3,8 @@ defmodule LiveQchatex.Models.Chat do
   Chat model module.
   """
   use Memento.Table,
-    attributes: [:id, :user_id, :title, :last_activity, :created_at],
-    index: [:user_id, :last_activity, :created_at],
+    attributes: [:id, :user_id, :private, :title, :last_activity, :created_at],
+    index: [:user_id, :private, :last_activity, :created_at],
     type: :ordered_set
 
   @typedoc """
@@ -13,6 +13,7 @@ defmodule LiveQchatex.Models.Chat do
   @type t :: %__MODULE__{
           id: String.t(),
           user_id: String.t(),
+          private: Boolean.t() | false,
           title: String.t(),
           last_activity: Integer.t(),
           created_at: DateTime.t()

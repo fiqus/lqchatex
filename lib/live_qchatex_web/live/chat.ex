@@ -186,12 +186,12 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   defp maybe_cancel_typing_timer(typing_timer), do: Process.cancel_timer(typing_timer)
 
   defp fetch_chat!(socket, id) do
-    socket |> assign(chat: Chats.get_chat!(id))
+    socket |> assign(chat_id: id, chat: Chats.get_chat!(id))
   end
 
   defp fetch_user(socket, sid) do
     {:ok, %Models.User{} = user} = Chats.get_or_create_user(sid)
-    socket |> assign(user: user)
+    socket |> assign(sid: sid, user: user)
   end
 
   defp fetch(%{:assigns => %{:chat => chat}} = socket) do

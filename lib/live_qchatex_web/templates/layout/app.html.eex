@@ -27,11 +27,6 @@
       <p class="alert alert-success" role="alert"><%= raw get_flash(@conn, :success) %></p>
       <p class="alert alert-danger" role="alert"><%= raw get_flash(@conn, :error) %></p>
       <%= render @view_module, @view_template, assigns %>
-      <section class="disclaimer">
-        <div><b>NOTE:</b> All chats, messages and users will be automatically deleted!</div>
-        <div>Chat rooms and all its messages after <b><%= timer_clean_chats() %></b> minutes without receiving new messages.</div>
-        <div>Users sessions will be purged after <b><%= timer_clean_users() %></b> minutes without writting/sending a message.</div>
-      </section>
     </main>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>

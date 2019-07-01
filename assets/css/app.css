@@ -35,14 +35,24 @@ header nav ul li {
   font-size: 90%;
 }
 
-.disclaimer {
-  font-size: 80%;
-}
-
 .alert-success {
   color: #448f31;
   background-color: #d9f7dd;
   border-color: #bcf1c0;
+}
+
+.disclaimer {
+  font-size: 80%;
+}
+
+.chats-list {
+  margin-top: 2em;
+}
+.chats-list h2 {
+  border-bottom: 1px solid #ddd;
+}
+.chats-list ul {
+  list-style: none;
 }
 
 .chat-room {

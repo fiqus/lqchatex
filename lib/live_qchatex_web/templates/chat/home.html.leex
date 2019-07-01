@@ -35,6 +35,7 @@
     <%= text_input :user, :nickname, placeholder: "Your nickname..", maxlength: 20 %>
     <%= text_input :chat, :title, placeholder: "Optional chat title..", maxlength: 100 %>
     <%= submit "Start", phx_disable_with: "Starting..." %>
+    <%= checkbox :chat, :private %> <span title="If checked, the chat won't be displayed on public chats list!">Private chat</span>
     </form>
   </article>
   <article class="column">
@@ -49,3 +50,7 @@
     </form>
   </article>
 </section>
+
+<%= LiveQchatexWeb.LayoutView.render_disclaimer(assigns) %>
+
+<%= live_render(@socket, LiveQchatexWeb.LiveChat.ChatsList) %>

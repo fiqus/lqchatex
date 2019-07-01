@@ -1,0 +1,13 @@
+<section class="chats-list">
+  <%= if @counter > 0 do %>
+  <h2>Public living chats: <%= @counter%></h2>
+
+  <ul>
+    <%= for chat <- @chats do %> 
+    <li><%= link("(#{chat.members}) #{chat.title}",
+      to: Routes.live_path(@socket, LiveQchatexWeb.LiveChat.Chat, chat.id),
+      title: "Click to join this public chat!") %></li>
+    <% end %>
+  </ul>
+  <% end %>
+</section>

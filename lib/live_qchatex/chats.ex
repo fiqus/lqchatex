@@ -20,6 +20,8 @@ defmodule LiveQchatex.Chats do
     subscribe()
     subscribe(chat)
     Presence.track_presence(self(), topic(chat), user.id, user |> Map.put(:typing, false))
+    # @TODO WIP Improve this and broadcast when an user leaves a chat!
+    Repo.broadcast(chat, topic(), [:chat, :updated])
   end
 
   @doc """
@@ -57,6 +59,14 @@ defmodule LiveQchatex.Chats do
       {:error, err} -> raise err
     end
   end
+
+  def get_public_chats() do
+    {:ok, chats} = Repo.find(Models.Chat, {:!=, :private, true})
+
+    chats |> Enum.sort(&(&1.created_at >= &2.created_at))
+  end
+
+  def count_chat_members(chat), do: chat |> topic() |> Presence.count_presences()
 
   @doc """
   Creates a chat.
@@ -147,6 +157,7 @@ defmodule LiveQchatex.Chats do
       |> sanitize_attrs()
       # @TODO Improve this!
       |> Repo.to_atom_map()
+      |> parse_bool(:private)
       |> remove_empty(:user_id)
       |> remove_empty(:title)
       |> remove_empty(:last_activity)
@@ -284,6 +295,16 @@ defmodule LiveQchatex.Chats do
       a ->
         a
     end)
+  end
+
+  defp parse_bool(attrs, field) do
+    value =
+      case Map.get(attrs, field, false) do
+        v when v in [true, "true"] -> true
+        _ -> false
+      end
+
+    attrs |> Map.put(field, value)
   end
 
   defp remove_empty(attrs, field) do

@@ -24,4 +24,8 @@ defmodule LiveQchatex.Presence do
       |> List.first()
     end)
   end
+
+  def count_presences(topic) do
+    Presence.list(topic) |> Map.keys() |> length()
+  end
 end

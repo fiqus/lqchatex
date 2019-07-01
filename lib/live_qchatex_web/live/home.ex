@@ -84,7 +84,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
 
   defp fetch_user(socket, sid) do
     {:ok, %Models.User{} = user} = Chats.get_or_create_user(sid)
-    socket |> assign(user: user)
+    socket |> assign(sid: sid, user: user)
   end
 
   defp fetch(socket) do
