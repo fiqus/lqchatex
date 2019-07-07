@@ -32,7 +32,7 @@
   <article class="column">
     <h2>Start new Qchatex</h2>
     <form action="#start" phx-submit="start">
-    <%= text_input :user, :nickname, placeholder: "Your nickname..", maxlength: 20 %>
+    <%= text_input :user, :nickname, value: @user.nickname, class: "focus-select", placeholder: "Your nickname..", maxlength: 20 %>
     <%= text_input :chat, :title, placeholder: "Optional chat title..", maxlength: 100 %>
     <%= submit "Start", phx_disable_with: "Starting..." %>
     <%= checkbox :chat, :private %> <span title="If checked, the chat won't be displayed on public chats list!">Private chat</span>
@@ -41,7 +41,7 @@
   <article class="column">
     <h2>Join existing Qchatex</h2>
     <form action="#join" phx-submit="join">
-      <%= text_input :user, :nickname, placeholder: "Your nickname..", maxlength: 20 %>
+      <%= text_input :user, :nickname, value: @user.nickname, class: "focus-select", placeholder: "Your nickname..", maxlength: 20 %>
       <%= text_input :chat, :id, placeholder: "Chat ID" %>
       <%= submit "Join", phx_disable_with: "Joining..." %>
       <%= if @error do %>

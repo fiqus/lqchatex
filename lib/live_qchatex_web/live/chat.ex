@@ -19,7 +19,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
          socket
          # @TODO Make this error to be displayed on home screen! (NOT WORKING)
          |> put_flash(:error, "The chat doesn't exist!")
-         |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
+         |> redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
     end
   end
 
