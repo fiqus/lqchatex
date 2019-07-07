@@ -9,11 +9,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   def mount(%{sid: sid, path_params: %{"id" => id}}, socket) do
     try do
       socket = socket |> fetch_chat!(id) |> fetch_user(sid)
-
-      if connected?(socket) do
-        Chats.track(socket.assigns.chat, socket.assigns.user)
-      end
-
+      if connected?(socket), do: Chats.track(socket.assigns.chat, socket.assigns.user)
       {:ok, socket |> fetch()}
     rescue
       err ->
@@ -44,7 +40,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       ansi_color: :magenta
     )
 
-    {:noreply, socket |> assign(chat: chat)}
+    {:noreply, socket |> update_chat(chat)}
   end
 
   def handle_info({[:chat, :cleared], counter} = info, socket) do
@@ -94,11 +90,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       ansi_color: :magenta
     )
 
-    {:noreply,
-     socket
-     |> handle_member_joins(payload.joins)
-     |> handle_member_leaves(payload.leaves)
-     |> update_members()}
+    {:noreply, socket |> handle_presence_payload(payload) |> update_members()}
   end
 
   def handle_info(info, socket) do
@@ -168,15 +160,8 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket}
   end
 
-  defp handle_member_joins(socket, _joins) do
+  defp handle_presence_payload(socket, %{joins: _joins, leaves: _leaves}) do
     # members = joins
-    # |> Map.values
-    # |> Enum.map(&(&1.metas |> List.first()))
-    socket
-  end
-
-  defp handle_member_leaves(socket, _leaves) do
-    # embers = leaves
     # |> Map.values
     # |> Enum.map(&(&1.metas |> List.first()))
     socket
@@ -220,7 +205,13 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   defp update_chat(%{:assigns => %{:chat => chat}} = socket, key, value) do
     {:ok, chat} = Chats.update_chat(chat, %{key => value})
 
-    socket |> assign(chat: chat)
+    socket |> update_chat(chat)
+  end
+
+  defp update_chat(%{:assigns => %{:chat => chat}} = socket, %Models.Chat{} = updated) do
+    if chat.id == updated.id,
+      do: socket |> assign(chat: updated),
+      else: socket
   end
 
   defp update_user(%{:assigns => %{:chat => chat, :user => user}} = socket, key, value) do

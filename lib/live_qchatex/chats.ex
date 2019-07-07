@@ -9,19 +9,25 @@ defmodule LiveQchatex.Chats do
 
   @topic inspect(__MODULE__)
 
-  def topic, do: @topic
-  def topic(%Models.Chat{} = chat), do: "#{@topic}/#{chat.id}"
+  def topic, do: "#{@topic}/global"
+  def topic(:presence, :chats), do: "#{@topic}/chats/presence"
+  def topic(%Models.Chat{} = chat), do: "#{@topic}/chats/#{chat.id}"
 
   def subscribe, do: topic() |> subscribe()
+  def subscribe(:presence, :chats), do: topic(:presence, :chats) |> subscribe()
   def subscribe(%Models.Chat{} = chat), do: chat |> topic() |> subscribe()
   def subscribe(topic), do: Repo.subscribe(topic)
 
   def track(%Models.Chat{} = chat, %Models.User{} = user) do
+    Presence.track_presence(self(), topic(chat), user.id, user |> Map.put(:typing, false))
+
+    Presence.track_presence(self(), topic(:presence, :chats), chat.id, %{
+      pid: self(),
+      user: user.id
+    })
+
     subscribe()
     subscribe(chat)
-    Presence.track_presence(self(), topic(chat), user.id, user |> Map.put(:typing, false))
-    # @TODO WIP Improve this and broadcast when an user leaves a chat!
-    Repo.broadcast(chat, topic(), [:chat, :updated])
   end
 
   @doc """
@@ -91,7 +97,7 @@ defmodule LiveQchatex.Chats do
       created_at: now
     }
     |> write_chat_attrs(attrs)
-    |> Repo.broadcast_event(@topic, [:chat, :created])
+    |> Repo.broadcast_event(topic(), [:chat, :created])
   end
 
   @doc """
@@ -109,7 +115,7 @@ defmodule LiveQchatex.Chats do
   def update_chat(%Models.Chat{} = chat, attrs) do
     chat
     |> write_chat_attrs(attrs)
-    |> Repo.broadcast_event(@topic, [:chat, :updated])
+    |> Repo.broadcast_event(topic(), [:chat, :updated])
   end
 
   @doc """
@@ -125,7 +131,7 @@ defmodule LiveQchatex.Chats do
       |> length()
 
     if found > 0 do
-      Repo.broadcast_all(count - found, @topic, [:chat, :cleared])
+      Repo.broadcast_all(count - found, topic(), [:chat, :cleared])
     end
 
     found
@@ -188,7 +194,7 @@ defmodule LiveQchatex.Chats do
   def create_user(sid, attrs \\ %{}) do
     %Models.User{id: sid, nickname: "Unnamed", created_at: utc_now(), last_activity: utc_now()}
     |> write_user_attrs(attrs)
-    |> Repo.broadcast_event(@topic, [:user, :created])
+    |> Repo.broadcast_event(topic(), [:user, :created])
   end
 
   @doc """
@@ -207,7 +213,7 @@ defmodule LiveQchatex.Chats do
     user
     |> Map.put(:last_activity, utc_now())
     |> write_user_attrs(attrs)
-    |> Repo.broadcast_event(@topic, [:user, :updated])
+    |> Repo.broadcast_event(topic(), [:user, :updated])
   end
 
   @doc """
@@ -219,7 +225,7 @@ defmodule LiveQchatex.Chats do
     found = length(users)
 
     if found > 0 do
-      Repo.broadcast_all(count - found, @topic, [:user, :cleared])
+      Repo.broadcast_all(count - found, topic(), [:user, :cleared])
     end
 
     found
@@ -247,10 +253,7 @@ defmodule LiveQchatex.Chats do
     )
   end
 
-  def list_chat_members(chat) do
-    topic(chat)
-    |> Presence.list_presences()
-  end
+  def list_chat_members(chat), do: chat |> topic() |> Presence.list_presences()
 
   def update_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
     Presence.update_presence(self(), topic(chat), user.id, user)
@@ -278,7 +281,7 @@ defmodule LiveQchatex.Chats do
     )
     |> Map.put(:timestamp, utc_now())
     |> Repo.write()
-    |> Repo.broadcast_event("#{@topic}/#{chat.id}", [:message, :created])
+    |> Repo.broadcast_event(topic(chat), [:message, :created])
   end
 
   defp foreign_fields(_, nil), do: nil

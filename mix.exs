@@ -4,13 +4,14 @@ defmodule LiveQchatex.MixProject do
   def project do
     [
       app: :live_qchatex,
-      version: "0.0.1",
-      elixir: "~> 1.5",
+      version: "0.1.0",
+      elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      aliases: aliases(),
       deps: deps(),
+      releases: releases(),
+      aliases: aliases(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coverage: :test,
@@ -41,7 +42,7 @@ defmodule LiveQchatex.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.4.4"},
+      {:phoenix, "~> 1.4"},
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -52,6 +53,16 @@ defmodule LiveQchatex.MixProject do
       {:guardian, "~> 1.0"},
       {:excoveralls, "~> 0.10", only: :test},
       {:memento, "~> 0.3.1"}
+    ]
+  end
+
+  # App releases configuration.
+  defp releases do
+    [
+      lqchatex: [
+        include_executables_for: [:unix, :windows],
+        applications: [runtime_tools: :permanent]
+      ]
     ]
   end
 

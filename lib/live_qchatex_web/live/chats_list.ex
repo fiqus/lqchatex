@@ -5,7 +5,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
   alias LiveQchatexWeb.ChatView
 
   def mount(_, socket) do
-    if connected?(socket), do: Chats.subscribe()
+    if connected?(socket), do: [Chats.subscribe(), Chats.subscribe(:presence, :chats)]
     {:ok, socket |> fetch()}
   end
 
@@ -38,9 +38,27 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
     {:noreply, socket |> fetch()}
   end
 
+  def handle_info(%{event: "presence_diff", payload: payload}, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> handle_presence_payload(payload)}
+  end
+
   def handle_info(info, socket) do
     Logger.warn("[#{socket.id}][chats-list-view] UNHANDLED INFO: #{inspect(info)}")
     {:noreply, socket}
+  end
+
+  defp handle_presence_payload(socket, %{joins: joins, leaves: leaves}) do
+    chats_ids = Enum.uniq(Map.keys(joins) ++ Map.keys(leaves))
+
+    chats =
+      socket.assigns.chats
+      |> Enum.map(&if Enum.member?(chats_ids, &1.id), do: add_chat_members_count(&1), else: &1)
+
+    socket |> fetch(chats)
   end
 
   defp fetch(socket) do
@@ -62,7 +80,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
   defp update_public_chat(socket, chat) do
     chats =
       socket.assigns.chats
-      |> Enum.map(&if &1.id == chat.id, do: chat |> add_chat_members_count(), else: &1)
+      |> Enum.map(&if &1.id == chat.id, do: add_chat_members_count(chat), else: &1)
 
     socket |> fetch(chats)
   end
