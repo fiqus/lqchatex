@@ -32,4 +32,7 @@ defmodule LiveQchatex.Application do
     LiveQchatexWeb.Endpoint.config_change(changed, removed)
     :ok
   end
+
+  def env, do: Application.get_env(:live_qchatex, :environment)
+  def env?(environment), do: env() == environment
 end
