@@ -20,23 +20,35 @@ liveSocket.connect()
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
 
-// Select the nodes that will be observed for mutations
-Array.from(document.getElementsByClassName("scroll-on-update")).forEach((targetNode) => {
-  document.addEventListener("DOMContentLoaded", () => {
-    targetNode.scrollTop = targetNode.scrollHeight
+function selectOnFocus() {
+  Array.from(document.getElementsByClassName("focus-select")).forEach((el) => {
+    el.onfocus = () => el.select();
+    if (Array.from(el.classList).indexOf("show-select") > -1) {
+      el.select();
+    }
   });
-  // Options for the observer (which mutations to observe)
-  const config = { attributes: true, childList: true, subtree: true };
+}
+
+function scrollOnUpdate() {
+  Array.from(document.getElementsByClassName("scroll-on-update")).forEach((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+}
+
+// Select the nodes that will be observed for mutations
+Array.from(document.getElementsByTagName("body")).forEach((body) => {
   // Create an observer instance with a callback function to execute when mutations are observed
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
       if (mutation.type == "childList") {
-        targetNode.scrollTop = targetNode.scrollHeight;
+        selectOnFocus();
+        scrollOnUpdate();
       }
     }
   });
-  // Start observing the target node for configured mutations
-  observer.observe(targetNode, config);
+
+  // Start observing the target node for configured mutations (which mutations to observe)
+  observer.observe(body, {attributes: true, childList: true, subtree: true});
 });
 
 window.copyToClipboard = (str) => {
