@@ -27,13 +27,13 @@ defmodule LiveQchatex.Chats do
     })
 
     subscribe(chat)
-    hearthbeat(chat)
+    hearthbeat(chat, :refresh)
     track(user)
   end
 
   def track(%Models.User{} = user) do
     subscribe()
-    hearthbeat(user)
+    hearthbeat(user, :refresh)
   end
 
   @doc """
@@ -64,7 +64,7 @@ defmodule LiveQchatex.Chats do
   defp hearthbeat(%Models.Chat{} = chat) do
     interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_chats] |> div(2)
 
-    Logger.debug("[chats] Sending CHAT hearthbeat every #{interval} seconds..")
+    Logger.debug("Sending CHAT hearthbeat every #{interval} seconds..")
 
     Process.send_after(self(), {:hearthbeat, :chat, chat.id}, interval * 1000)
   end
@@ -72,7 +72,7 @@ defmodule LiveQchatex.Chats do
   defp hearthbeat(%Models.User{} = user) do
     interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_users] |> div(2)
 
-    Logger.debug("[chats] Sending USER hearthbeat every #{interval} seconds..")
+    Logger.debug("Sending USER hearthbeat every #{interval} seconds..")
 
     Process.send_after(self(), {:hearthbeat, :user, user.id}, interval * 1000)
   end
