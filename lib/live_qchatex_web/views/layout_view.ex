@@ -4,7 +4,8 @@ defmodule LiveQchatexWeb.LayoutView do
   def render_disclaimer(assigns), do: render("disclaimer.html", assigns)
 
   def render_version(),
-    do: "Live Qchatex <b>v#{get_app_version()}.#{get_commit_date()}</b> at #{get_commit_link()}"
+    # do: "Live Qchatex <b>v#{get_app_version()}.#{get_commit_date()}</b> at #{get_commit_link()}"
+    do: "Live Qchatex <b>v#{get_app_version()}</b>"
 
   def repo_url(path \\ ""),
     do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:repo] <> path
