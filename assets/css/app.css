@@ -17,6 +17,11 @@ header nav ul li {
   text-align: left;
 }
 
+footer {
+  margin-top: 40px;
+  font-size: 70%;
+}
+
 .main-logo {
   min-width: 300px;
   margin: auto;

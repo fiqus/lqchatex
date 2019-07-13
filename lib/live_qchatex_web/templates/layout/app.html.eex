@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Live Qchatex · Elixir + Phoenix LiveView + PubSub + Mnesia + Memento · Fiqus.coop</title>
+    <title>Live Qchatex · Elixir + Phoenix LiveView + PubSub + Presence + Mnesia + Memento · Fiqus.coop</title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
   </head>
   <body>
@@ -13,7 +13,7 @@
         <nav role="navigation">
           <ul>
             <li><a href="<%= Routes.live_path(@conn, LiveQchatexWeb.LiveChat.Home) %>">Home</a></li>
-            <li><a href="https://github.com/fiqus/lqchatex" target="_blank">Repo</a></li>
+            <li><a href="<%= repo_url() %>" target="_blank">Repo</a></li>
           </ul>
         </nav>
         <h1>Live Qchatex</h1>
@@ -28,6 +28,7 @@
       <p class="alert alert-danger" role="alert"><%= raw get_flash(@conn, :error) %></p>
       <%= render @view_module, @view_template, assigns %>
     </main>
+    <footer><%= raw render_version() %></footer>
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
