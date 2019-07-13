@@ -7,8 +7,19 @@ defmodule LiveQchatexWeb.LiveChat.Home do
   alias LiveQchatexWeb.Router.Helpers, as: Routes
 
   def mount(%{sid: sid}, socket) do
-    if connected?(socket), do: Chats.subscribe()
-    {:ok, socket |> fetch_user(sid) |> fetch()}
+    try do
+      socket = socket |> fetch_user(sid)
+      if connected?(socket), do: Chats.track(socket.assigns.user)
+      {:ok, socket |> fetch()}
+    rescue
+      err ->
+        Logger.error("Can't mount the home view #{inspect(err)}")
+
+        {:stop,
+         socket
+         # @TODO Make this error to be displayed on home screen! (NOT WORKING)
+         |> put_flash(:error, "Sorry, an error was just happened!")}
+    end
   end
 
   def render(assigns) do
@@ -45,6 +56,14 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     )
 
     {:noreply, socket |> set_counter(:users, counter)}
+  end
+
+  def handle_info({:hearthbeat, _, _} = info, socket) do
+    Logger.debug("[#{socket.id}][home-view] HANDLE HEARTHBEAT: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    Chats.handle_hearthbeat(info, socket)
   end
 
   def handle_info(info, socket) do

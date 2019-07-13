@@ -2,7 +2,7 @@ defmodule LiveQchatex.Chats do
   @moduledoc """
   The Chats context.
   """
-
+  require Logger
   alias LiveQchatex.Repo
   alias LiveQchatex.Models
   alias LiveQchatex.Presence
@@ -26,8 +26,14 @@ defmodule LiveQchatex.Chats do
       user: user.id
     })
 
-    subscribe()
     subscribe(chat)
+    hearthbeat(chat)
+    track(user)
+  end
+
+  def track(%Models.User{} = user) do
+    subscribe()
+    hearthbeat(user)
   end
 
   @doc """
@@ -35,14 +41,40 @@ defmodule LiveQchatex.Chats do
 
   ## Examples
 
-      iex> update_last_activity(record)
-      {:ok, record} | {:error, any()}
+      iex> update_last_activity!(record)
+      record | raise
 
   """
-  def update_last_activity(%{} = record) do
-    record
-    |> Map.put(:last_activity, utc_now())
-    |> Repo.write()
+  def update_last_activity!(%{} = record) do
+    {:ok, result} = record |> Repo.update(%{last_activity: utc_now()})
+    result
+  end
+
+  def handle_hearthbeat({:hearthbeat, :chat, chat_id}, state),
+    do: hearthbeat(%Models.Chat{id: chat_id}, state)
+
+  def handle_hearthbeat({:hearthbeat, :user, user_id}, state),
+    do: hearthbeat(%Models.User{id: user_id}, state)
+
+  defp hearthbeat(model, state) do
+    model |> update_last_activity!() |> hearthbeat()
+    {:noreply, state}
+  end
+
+  defp hearthbeat(%Models.Chat{} = chat) do
+    interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_chats] |> div(2)
+
+    Logger.debug("[chats] Sending CHAT hearthbeat every #{interval} seconds..")
+
+    Process.send_after(self(), {:hearthbeat, :chat, chat.id}, interval * 1000)
+  end
+
+  defp hearthbeat(%Models.User{} = user) do
+    interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_users] |> div(2)
+
+    Logger.debug("[chats] Sending USER hearthbeat every #{interval} seconds..")
+
+    Process.send_after(self(), {:hearthbeat, :user, user.id}, interval * 1000)
   end
 
   @doc """
@@ -272,7 +304,7 @@ defmodule LiveQchatex.Chats do
   end
 
   def create_message(chat, from_user, text) do
-    {:ok, _} = update_last_activity(chat)
+    chat = chat |> update_last_activity!()
 
     %Models.Message{chat_id: chat.id, text: text}
     |> Map.put(

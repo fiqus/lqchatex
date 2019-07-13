@@ -72,9 +72,9 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       ansi_color: :magenta
     )
 
-    {:ok, _} = Chats.update_last_activity(socket.assigns.user)
+    user = Chats.update_last_activity!(socket.assigns.user)
     Chats.update_member_typing(socket.assigns.chat, socket.assigns.user, false)
-    {:noreply, socket}
+    {:noreply, socket |> assign(:user, user)}
   end
 
   def handle_info({[:message, :created], message} = info, socket) do
@@ -91,6 +91,14 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     )
 
     {:noreply, socket |> handle_presence_payload(payload) |> update_members()}
+  end
+
+  def handle_info({:hearthbeat, _, _} = info, socket) do
+    Logger.debug("[#{socket.id}][chat-view] HANDLE HEARTHBEAT: #{inspect(info)}",
+      ansi_color: :magenta
+    )
+
+    Chats.handle_hearthbeat(info, socket)
   end
 
   def handle_info(info, socket) do

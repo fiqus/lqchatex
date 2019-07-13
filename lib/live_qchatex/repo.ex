@@ -76,6 +76,22 @@ defmodule LiveQchatex.Repo do
     end
   end
 
+  @spec update(Memento.Table.record(), Map.t()) :: {:ok, Memento.Table.record()} | {:error, any()}
+  def update(model = %{__struct__: table}, attrs) do
+    try do
+      Memento.transaction!(fn ->
+        data = Memento.Query.read(table, model.id, lock: :write)
+        %{} = result = data |> cast(attrs) |> Memento.Query.write()
+        Logger.debug("Repo.update(#{inspect(table)}) OK: #{inspect(result)}")
+        {:ok, result}
+      end)
+    rescue
+      err ->
+        Logger.debug("Repo.update(#{inspect(table)}) ERROR: #{inspect(err)}")
+        {:error, err}
+    end
+  end
+
   @spec read(Memento.Table.name(), term()) :: {:ok, Memento.Table.record()} | {:error, any()}
   def read(model, id) do
     try do
