@@ -7,7 +7,7 @@
   </article>
 </section>
 
-<%= if Mix.env() == :dev do %>
+<%= if LiveQchatex.Application.env?(:dev) do %>
 <h4>Socket ID: <%= @socket.id %></h4>
 <% end %>
 

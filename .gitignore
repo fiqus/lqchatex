@@ -42,3 +42,4 @@ npm-debug.log
 .elixir_ls
 .vscode
 .tool-versions
+/VERSION

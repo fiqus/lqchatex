@@ -4,7 +4,7 @@ defmodule LiveQchatex.MixProject do
   def project do
     [
       app: :live_qchatex,
-      version: "0.1.1",
+      version: version(),
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -32,6 +32,9 @@ defmodule LiveQchatex.MixProject do
       extra_applications: [:logger, :runtime_tools]
     ]
   end
+
+  # Returns the current app version
+  defp version, do: "0.1.1"
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -70,6 +73,7 @@ defmodule LiveQchatex.MixProject do
   defp aliases do
     [
       coverage: ["coveralls.html"],
+      "deps.get": ["deps.get", &update_version/1],
       "mnesia.reset": fn _ -> reset_mnesia(Mix.env()) end
     ]
   end
@@ -77,7 +81,30 @@ defmodule LiveQchatex.MixProject do
   defp reset_mnesia(:prod), do: Mix.raise("Can't reset mnesia on production!")
 
   defp reset_mnesia(_) do
-    IO.puts("Removing '.mnesia' directory..")
+    Mix.shell().info("Removing '.mnesia' directory..")
     Mix.shell().cmd("rm -rf .mnesia")
+  end
+
+  defp update_version(_) do
+    contents = [
+      version(),
+      get_commit_sha(),
+      get_commit_date()
+    ]
+
+    Mix.shell().info("Updating version with: #{inspect(contents)}")
+    File.write("VERSION", Enum.join(contents, "\n"), [:write])
+  end
+
+  defp get_commit_sha(), do: System.cmd("git", ["rev-parse", "HEAD"]) |> elem(0) |> String.trim()
+
+  defp get_commit_date() do
+    [sec, tz] =
+      System.cmd("git", ~w|log -1 --date=raw --format=%cd|)
+      |> elem(0)
+      |> String.split(~r/\s+/, trim: true)
+      |> Enum.map(&String.to_integer/1)
+
+    DateTime.from_unix!(sec + tz * 36)
   end
 end
