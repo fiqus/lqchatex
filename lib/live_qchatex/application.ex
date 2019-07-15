@@ -42,7 +42,7 @@ defmodule LiveQchatex.Application do
   def env?(environment), do: env() == environment
 
   def version, do: Application.get_env(:live_qchatex, :version)
-  def version(key), do: Application.get_env(:live_qchatex, :version)[key]
+  def version(key), do: version()[key]
 
   defp load_version() do
     [vsn, hash, date] =

@@ -1,5 +1,5 @@
 <section class="disclaimer">
   <div><b>NOTE:</b> All chats, messages and users will be automatically deleted!</div>
-  <div>Chat rooms and all its messages after <b><%= timer_clean_chats() %></b> minutes without receiving new messages.</div>
-  <div>Users sessions will be purged after <b><%= timer_clean_users() %></b> minutes without writting/sending a message.</div>
+  <div>Empty chat rooms and all its messages after <b><%= timer_clean_chats() %></b> minutes without having members.</div>
+  <div>Users will be purged after <b><%= timer_clean_users() %></b> minutes of quitting the app.</div>
 </section>
