@@ -14,6 +14,9 @@
           <ul>
             <li><a href="<%= Routes.live_path(@conn, LiveQchatexWeb.LiveChat.Home) %>">Home</a></li>
             <li><a href="<%= repo_url() %>" target="_blank">Repo</a></li>
+            <%= if !LiveQchatex.Application.env?(:prod) do %>
+            <li><a href="<%= demo_url() %>" target="_blank">Live Demo</a></li>
+            <% end %>
           </ul>
         </nav>
         <h1>Live Qchatex</h1>

@@ -1,10 +1,20 @@
 defmodule LiveQchatex.MixProject do
   use Mix.Project
 
+  @github_url "https://github.com/fiqus/lqchatex"
+  @demo_url "https://lqchatex.fiqus.coop"
+  @version "0.1.2"
+
   def project do
     [
       app: :live_qchatex,
-      version: version(),
+      version: @version,
+      name: "LiveQchatex",
+      description:
+        "Very simple and quick chat engine that allows you to create and join chat rooms on-the-fly.",
+      source_url: @github_url,
+      homepage_url: @github_url,
+      demo_url: @demo_url,
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -32,9 +42,6 @@ defmodule LiveQchatex.MixProject do
       extra_applications: [:logger, :runtime_tools]
     ]
   end
-
-  # Returns the current app version
-  defp version, do: "0.1.1"
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
@@ -87,7 +94,7 @@ defmodule LiveQchatex.MixProject do
 
   defp update_version(_) do
     contents = [
-      version(),
+      @version,
       get_commit_sha(),
       get_commit_date()
     ]

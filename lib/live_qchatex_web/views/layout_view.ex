@@ -10,6 +10,9 @@ defmodule LiveQchatexWeb.LayoutView do
   def repo_url(path \\ ""),
     do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:repo] <> path
 
+  def demo_url(),
+    do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:demo]
+
   def timer_clean_chats(), do: :cron_interval_clean_chats |> get_timer()
   def timer_clean_users(), do: :cron_interval_clean_users |> get_timer()
 

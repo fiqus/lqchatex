@@ -10,7 +10,8 @@ use Mix.Config
 # Configures the endpoint
 config :live_qchatex, LiveQchatexWeb.Endpoint,
   environment: Mix.env(),
-  repo: "https://github.com/fiqus/lqchatex",
+  repo: Mix.Project.config()[:source_url],
+  demo: Mix.Project.config()[:demo_url],
   url: [host: "localhost"],
   secret_key_base: "29YRW8+WiK13N3OJb0xPWIcOXSDHQ+BKW3Ext0j1f0g8QAcMF1hc1L9oICeJXCC6",
   render_errors: [view: LiveQchatexWeb.ErrorView, accepts: ~w(html json)],
