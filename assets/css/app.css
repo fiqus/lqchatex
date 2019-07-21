@@ -123,6 +123,15 @@ footer {
   cursor: pointer;
 }
 
+.chat-scope {
+  margin-left: 20px;
+}
+.chat-scope-toggle:hover {
+  color: #5cadf0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .status-messages {
   position: fixed;
   bottom: 20px;

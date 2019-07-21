@@ -1,0 +1,8 @@
+<section class="row">
+  <article class="column">
+      <h2>Current living chats: <%= @counters.chats%></h2>
+  </article>
+  <article class="column">
+      <h2>Current living users: <%= @counters.users%></h2>
+  </article>
+</section>

@@ -15,14 +15,7 @@
   </p>
 </section>
 
-<section class="row">
-  <article class="column">
-      <h2>Current living chats: <%= @counters.chats%></h2>
-  </article>
-  <article class="column">
-      <h2>Current living users: <%= @counters.users%></h2>
-  </article>
-</section>
+<%= LiveQchatexWeb.LayoutView.render_counters(assigns) %>
 
 <%= if LiveQchatex.Application.env?(:dev) do %>
 <h4>Socket ID: <%= @socket.id %></h4>

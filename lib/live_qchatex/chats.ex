@@ -333,18 +333,16 @@ defmodule LiveQchatex.Chats do
   end
 
   defp parse_bool(attrs, field) do
-    value =
-      case Map.get(attrs, field, false) do
-        v when v in [true, "true"] -> true
-        _ -> false
-      end
-
-    attrs |> Map.put(field, value)
+    case Map.get(attrs, field, "") do
+      "" -> attrs |> Map.delete(field)
+      v when v in [true, "true"] -> attrs |> Map.put(field, true)
+      _ -> attrs |> Map.put(field, false)
+    end
   end
 
   defp remove_empty(attrs, field) do
     if Map.get(attrs, field, "") |> empty_value?(),
-      do: Map.delete(attrs, field),
+      do: attrs |> Map.delete(field),
       else: attrs
   end
 

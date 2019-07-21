@@ -159,6 +159,10 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     |> maybe_update_title(title)
   end
 
+  def handle_event("toggle_scope", _, socket) do
+    socket |> maybe_toggle_scope()
+  end
+
   def handle_event("click", data, socket) do
     {:noreply, socket |> assign(:click, data)}
   end
@@ -278,6 +282,17 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       socket |> update_title(title)
     else
       # socket |> response_error("The title is not valid!")
+      {:noreply, socket}
+    end
+  end
+
+  defp maybe_toggle_scope(%{:assigns => %{:chat => chat, :user => user}} = socket) do
+    if chat.user_id == user.id do
+      scope = if chat.private, do: "public", else: "private"
+      Logger.debug("[#{socket.id}][chat-view] Changing chat scope to: #{scope}")
+
+      {:noreply, socket |> update_chat(:private, scope == "private")}
+    else
       {:noreply, socket}
     end
   end

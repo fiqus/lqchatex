@@ -1,11 +1,4 @@
-<section class="row">
-  <article class="column">
-      <h2>Current living chats: <%= @counters.chats%></h2>
-  </article>
-  <article class="column">
-      <h2>Current living users: <%= @counters.users%></h2>
-  </article>
-</section>
+<%= LiveQchatexWeb.LayoutView.render_counters(assigns) %>
 
 <%= if LiveQchatex.Application.env?(:dev) do %>
 <h4>Socket ID: <%= @socket.id %></h4>
@@ -14,7 +7,10 @@
 <section class="chat-room">
   <div class="chat-contents">
     <h2><%= raw parse_title(assigns, @chat, @user) %></h2>
-    <h4><b>Qchatex ID:</b><br/><span onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></span></h4>
+    <h4>
+      <b>Qchatex ID:</b> <%= raw parse_chat_scope(@chat, @user) %>
+      <div onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></div>
+    </h4>
     <ul class="messages-list scroll-on-update">
       <%=for message <- @messages do %>
         <li>

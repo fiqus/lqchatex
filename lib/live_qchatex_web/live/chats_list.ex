@@ -26,7 +26,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
       ansi_color: :magenta
     )
 
-    {:noreply, if(chat.private != true, do: update_public_chat(socket, chat), else: socket)}
+    {:noreply, socket |> update_public_chat(chat)}
   end
 
   def handle_info({[:chat, :cleared], _} = info, socket) do
@@ -39,7 +39,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
   end
 
   def handle_info(%{event: "presence_diff", payload: payload}, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
+    Logger.debug("[#{socket.id}][chats-list-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
       ansi_color: :magenta
     )
 
@@ -74,15 +74,33 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
   end
 
   defp add_public_chat(socket, chat) do
+    Logger.debug("[#{socket.id}][chats-list-view] Adding public chat: #{chat.title}")
     socket |> fetch([chat |> add_chat_members_count() | socket.assigns.chats])
   end
 
   defp update_public_chat(socket, chat) do
-    chats =
-      socket.assigns.chats
-      |> Enum.map(&if &1.id == chat.id, do: add_chat_members_count(chat), else: &1)
+    idx = socket.assigns.chats |> Enum.find_index(&(&1.id == chat.id))
 
-    socket |> fetch(chats)
+    case {chat.private, idx} do
+      {true, nil} ->
+        socket
+
+      {true, _} ->
+        Logger.debug("[#{socket.id}][chats-list-view] Removing private chat: #{chat.title}")
+        socket |> fetch(socket.assigns.chats |> Enum.reject(&(&1.id == chat.id)))
+
+      {false, nil} ->
+        socket |> add_public_chat(chat)
+
+      {false, _} ->
+        Logger.debug("[#{socket.id}][chats-list-view] Updating public chat: #{chat.title}")
+
+        socket
+        |> fetch(
+          socket.assigns.chats
+          |> Enum.map(&if &1.id == chat.id, do: add_chat_members_count(chat), else: &1)
+        )
+    end
   end
 
   defp add_chat_members_count(chat), do: chat |> Map.put(:members, Chats.count_chat_members(chat))

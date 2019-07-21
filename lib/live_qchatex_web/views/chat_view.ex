@@ -18,6 +18,18 @@ defmodule LiveQchatexWeb.ChatView do
     end
   end
 
+  def parse_chat_scope(chat, user) do
+    scope = if chat.private, do: "private", else: "public"
+
+    if chat.user_id == user.id do
+      ~s(<span class="chat-scope chat-scope-toggle" phx-click="toggle_scope" phx-disable="toggling.." title="Toggle chat private/public status">\(#{
+        scope
+      }\)</span>)
+    else
+      ~s(<span class="chat-scope">\(#{scope}\)</span>)
+    end
+  end
+
   def parse_member(assigns, chat, user, member) do
     {class, click, title} =
       if member.id == user.id,

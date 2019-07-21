@@ -1,6 +1,7 @@
 defmodule LiveQchatexWeb.LayoutView do
   use LiveQchatexWeb, :view
 
+  def render_counters(assigns), do: render("counters.html", assigns)
   def render_disclaimer(assigns), do: render("disclaimer.html", assigns)
 
   def render_version(),
