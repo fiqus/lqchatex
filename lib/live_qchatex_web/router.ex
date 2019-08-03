@@ -1,6 +1,5 @@
 defmodule LiveQchatexWeb.Router do
   use LiveQchatexWeb, :router
-  import Phoenix.LiveView.Router
 
   pipeline :browser do
     plug :accepts, ["html"]

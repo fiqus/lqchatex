@@ -1,5 +1,5 @@
 # Live Qchatex
-## Open sourced web application done by [Fiqus](https://fiqus.coop) for educational purposes.
+## Open sourced web application done by [Fiqus](https://fiqus.coop) for educational and experimental purposes.
 
 The idea was to research and practice about [Phoenix LiveView](https://github.com/phoenixframework/phoenix_live_view) implementation and to play around a little with [Phoenix PubSub](https://hexdocs.pm/phoenix_pubsub/) + [Presence](https://hexdocs.pm/phoenix/Phoenix.Presence.html) for sockets, using [Memento](https://github.com/sheharyarn/memento) as [Elixir](https://elixir-lang.org/) wrapper to [Erlang Mnesia](https://learnyousomeerlang.com/mnesia) for data storage.
 
@@ -12,7 +12,7 @@ Hosted by [gigalixir](https://gigalixir.com/).
 
 
 # Development
-## Pre-requisites:
+## Pre-requisites
 You will have to install:
   * `Elixir` 1.8 or later
   * `Erlang/OTP` 20 or later
