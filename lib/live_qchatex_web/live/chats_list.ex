@@ -38,12 +38,13 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
     {:noreply, socket |> fetch()}
   end
 
-  def handle_info(%{event: "presence_diff", payload: payload}, socket) do
-    Logger.debug("[#{socket.id}][chats-list-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
+  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
+    Logger.debug(
+      "[#{socket.id}][chats-list-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
       ansi_color: :magenta
     )
 
-    {:noreply, socket |> handle_presence_payload(payload)}
+    {:noreply, socket |> handle_presence_payload(topic, payload)}
   end
 
   def handle_info(info, socket) do
@@ -51,7 +52,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
     {:noreply, socket}
   end
 
-  defp handle_presence_payload(socket, %{joins: joins, leaves: leaves}) do
+  defp handle_presence_payload(socket, _topic, %{joins: joins, leaves: leaves}) do
     chats_ids = Enum.uniq(Map.keys(joins) ++ Map.keys(leaves))
 
     chats =

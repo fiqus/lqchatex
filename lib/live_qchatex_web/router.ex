@@ -17,10 +17,6 @@ defmodule LiveQchatexWeb.Router do
 
     live "/", LiveChat.Home, session: [:sid]
     live "/chat/:id", LiveChat.Chat, session: [:sid, :path_params]
+    live "/user/:id", LiveChat.User, session: [:sid, :path_params]
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", LiveQchatexWeb do
-  #   pipe_through :api
-  # end
 end

@@ -34,18 +34,27 @@ defmodule LiveQchatexWeb.ChatView do
     {class, click, title} =
       if member.id == user.id,
         do: {"myself", "show_input_nickname", "Click to change your nick!"},
-        else: {"member", "", "SOON: Click to send private message!"}
+        else: {"member", "", "Click to start a private chat with the user!"}
 
-    if member.id == user.id && Map.get(assigns, :click) == "show_input_nickname" do
-      ~s(<form action="#send" phx-submit="update_nickname">
-        <p><input type="text" name="nick" class="focus-select show-select" value="#{
-        member.nickname
-      }" maxlength="20"/></p>
-      </form>)
-    else
-      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}" style="color:#{
-        member_color(member.id)
-      }">#{parse_member_nickname(chat, member)}</p>)
+    cond do
+      member.id == user.id && Map.get(assigns, :click) == "show_input_nickname" ->
+        ~s(<form action="#send" phx-submit="update_nickname">
+          <p><input type="text" name="nick" class="focus-select show-select" value="#{
+          member.nickname
+        }" maxlength="20"/></p>
+        </form>)
+
+      member.id == user.id ->
+        ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}" style="color:#{
+          member_color(member.id)
+        }">#{parse_member_nickname(chat, member)}</p>)
+
+      true ->
+        href = Routes.live_path(assigns.socket, LiveQchatexWeb.LiveChat.User, member.id)
+
+        ~s(<p><a class="#{class}" href="#{href}" target="_blank" title="#{title}" style="color:#{
+          member_color(member.id)
+        }">#{parse_member_nickname(chat, member)}</a></p>)
     end
   end
 

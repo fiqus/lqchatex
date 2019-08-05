@@ -58,6 +58,15 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     {:noreply, socket |> set_counter(:users, counter)}
   end
 
+  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
+    Logger.debug(
+      "[#{socket.id}][home-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
+      ansi_color: :magenta
+    )
+
+    {:noreply, socket |> handle_presence_payload(topic, payload)}
+  end
+
   def handle_info({:hearthbeat, _, _} = info, socket) do
     Logger.debug("[#{socket.id}][home-view] HANDLE HEARTHBEAT: #{inspect(info)}",
       ansi_color: :magenta
@@ -95,6 +104,19 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     end
   end
 
+  defp handle_presence_payload(socket, topic, payload) do
+    cond do
+      topic == Chats.topic(:presence, :chats) ->
+        socket |> maybe_clear_invite(payload) |> update_invites()
+
+      topic == Chats.topic(socket.assigns.user) ->
+        socket |> update_invites()
+
+      true ->
+        socket
+    end
+  end
+
   defp redirect_to_chat(socket, chat) do
     {:stop,
      socket
@@ -108,6 +130,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
 
   defp fetch(socket) do
     socket
+    |> update_invites()
     |> assign(
       counters: %{
         chats: Chats.count_chats(),
@@ -123,6 +146,29 @@ defmodule LiveQchatexWeb.LiveChat.Home do
 
   defp update_counter(%{:assigns => %{:counters => counters}} = socket, key, amount) do
     socket |> set_counter(key, counters[key] + amount)
+  end
+
+  defp update_invites(%{assigns: %{user: user}} = socket) do
+    socket |> assign(invites: user |> Chats.list_chat_invites())
+  end
+
+  defp maybe_clear_invite(nil, socket), do: socket
+
+  defp maybe_clear_invite(invite, %{assigns: assigns} = socket) do
+    Chats.private_chat_clear(assigns.user, invite.key)
+    socket
+  end
+
+  defp maybe_clear_invite(%{assigns: assigns} = socket, %{leaves: leaves}) do
+    leaves
+    |> Enum.each(fn {chat_id, %{metas: [%{user: user_id}]}} ->
+      Chats.topic(assigns.user)
+      |> LiveQchatex.Presence.list_presences()
+      |> Enum.find(&(&1.chat == chat_id and &1.key == user_id))
+      |> maybe_clear_invite(socket)
+    end)
+
+    socket
   end
 
   defp response_error(socket, error), do: {:noreply, assign(socket, error: error)}

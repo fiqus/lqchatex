@@ -1,0 +1,13 @@
+<%= if length(@invites) > 0 do %>
+<section class="user-chats-invites">
+  <h2>Private chat invites</h2>
+  <ul>
+    <%= for invite <- @invites do %> 
+    <li><%= link(invite.from,
+      to: Routes.live_path(@socket, LiveQchatexWeb.LiveChat.Chat, invite.chat),
+      target: "_blank",
+      title: "Click to join this private chat!") %></li>
+    <% end %>
+  </ul>
+</section>
+<% end %>

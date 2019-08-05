@@ -50,6 +50,27 @@ footer {
   font-size: 80%;
 }
 
+.user-chats-invites {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px;
+  background: #f6ffd6;
+  border: solid 2px #5cadf0;
+  border-radius: 10px;
+}
+.user-chats-invites h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.user-chats-invites ul {
+  list-style: none;
+  margin-bottom: auto;
+}
+.user-chats-invites ul li:last-of-type {
+  margin-bottom: auto;
+}
+
 .chats-list {
   margin-top: 2em;
 }
@@ -101,10 +122,12 @@ footer {
   margin: auto;
 }
 .chat-members .members-list input,
+.chat-members .members-list a,
 .chat-members .members-list p {
   width: 100px;
   height: 25px;
 }
+.chat-members .members-list a:hover,
 .chat-members .members-list p:hover {
   cursor: pointer;
   text-decoration: underline;

@@ -43,6 +43,8 @@
   </article>
 </section>
 
+<%= LiveQchatexWeb.LayoutView.render_invites(assigns) %>
+
 <%= LiveQchatexWeb.LayoutView.render_disclaimer(assigns) %>
 
 <%= live_render(@socket, LiveQchatexWeb.LiveChat.ChatsList) %>

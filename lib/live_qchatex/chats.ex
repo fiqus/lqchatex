@@ -9,14 +9,18 @@ defmodule LiveQchatex.Chats do
 
   @topic inspect(__MODULE__)
 
-  def topic, do: "#{@topic}/global"
-  def topic(:presence, :chats), do: "#{@topic}/chats/presence"
-  def topic(%Models.Chat{} = chat), do: "#{@topic}/chats/#{chat.id}"
+  def topic(name) when is_binary(name), do: "#{@topic}/#{name}"
+  def topic(%Models.Chat{} = chat), do: "chats/#{chat.id}" |> topic()
+  def topic(%Models.User{} = user), do: "users/#{user.id}" |> topic()
+  def topic(:presence, :chats), do: "chats/presence" |> topic()
+  def topic(:index, :chats), do: "chats/index" |> topic()
+  def topic, do: "global" |> topic()
 
-  def subscribe, do: topic() |> subscribe()
-  def subscribe(:presence, :chats), do: topic(:presence, :chats) |> subscribe()
+  def subscribe(topic) when is_binary(topic), do: Repo.subscribe(topic)
   def subscribe(%Models.Chat{} = chat), do: chat |> topic() |> subscribe()
-  def subscribe(topic), do: Repo.subscribe(topic)
+  def subscribe(%Models.User{} = user), do: user |> topic() |> subscribe()
+  def subscribe(:presence, :chats), do: topic(:presence, :chats) |> subscribe()
+  def subscribe, do: topic() |> subscribe()
 
   def track(%Models.Chat{} = chat, %Models.User{} = user) do
     Presence.track_presence(self(), topic(chat), user.id, user |> Map.put(:typing, false))
@@ -33,7 +37,49 @@ defmodule LiveQchatex.Chats do
 
   def track(%Models.User{} = user) do
     subscribe()
+    subscribe(user)
+    subscribe(:presence, :chats)
     hearthbeat(user, :refresh)
+  end
+
+  def private_chat_invite(
+        %Models.Chat{} = chat,
+        %Models.User{} = from_user,
+        %Models.User{} = to_user
+      ) do
+    LiveQchatex.Application.get_repo_pid()
+    |> Presence.track_presence(topic(:index, :chats), chat.id, %{
+      from_user: from_user.id,
+      to_user: to_user.id
+    })
+
+    LiveQchatex.Application.get_repo_pid()
+    |> Presence.track_presence(topic(to_user), from_user.id, %{
+      from: from_user.nickname,
+      chat: chat.id
+    })
+  end
+
+  def private_chat_clear(%Models.User{} = to_user, from_user_id) do
+    LiveQchatex.Application.get_repo_pid()
+    |> Presence.untrack_presence(topic(to_user), from_user_id)
+  end
+
+  def private_chat_remove(%Models.Chat{} = chat) do
+    presence = LiveQchatex.Presence.get_presence(topic(:index, :chats), chat.id)
+
+    case presence do
+      %{from_user: from_user_id, to_user: to_user_id} ->
+        private_chat_clear(%Models.User{id: to_user_id}, from_user_id)
+
+        LiveQchatex.Application.get_repo_pid()
+        |> Presence.untrack_presence(topic(:index, :chats), chat.id)
+
+        :ok
+
+      _ ->
+        :none
+    end
   end
 
   @doc """
@@ -159,6 +205,7 @@ defmodule LiveQchatex.Chats do
 
     found =
       chats
+      |> clear_chats_invites()
       |> clear_messages()
       |> length()
 
@@ -167,6 +214,11 @@ defmodule LiveQchatex.Chats do
     end
 
     found
+  end
+
+  def clear_chats_invites(chats) do
+    chats |> Enum.each(&private_chat_remove/1)
+    chats
   end
 
   def clear_messages(chats) do
@@ -203,6 +255,42 @@ defmodule LiveQchatex.Chats do
     )
   end
 
+  @doc """
+  Gets a single user.
+
+  Raises if the User does not exist.
+
+  ## Examples
+
+      iex> get_user!(123)
+      %User{}
+
+      iex> get_user!(456)
+      ** (NoMatchError)
+
+  """
+  def get_user!(id) do
+    case Repo.read(Models.User, id) do
+      {:ok, %Models.User{} = user} -> user
+      {:error, err} -> raise err
+    end
+  end
+
+  @doc """
+  Gets or creates an user.
+
+  ## Examples
+
+      iex> get_or_create_user(sid)
+      {:ok, %User{}}
+
+      iex> get_or_create_user("not-exists")
+      {:ok, %User{}}
+
+      iex> get_or_create_user(...)
+      {:error, any()}
+
+  """
   def get_or_create_user(sid) do
     case Repo.read(Models.User, sid) do
       {:ok, %Models.User{}} = ok -> ok
@@ -285,6 +373,11 @@ defmodule LiveQchatex.Chats do
     )
   end
 
+  def is_user_in_chat?(chat_id, user_id),
+    do: !!LiveQchatex.Presence.get_presence(topic(%Models.Chat{id: chat_id}), user_id)
+
+  def list_chat_invites(user), do: user |> topic() |> Presence.list_presences()
+
   def list_chat_members(chat), do: chat |> topic() |> Presence.list_presences()
 
   def update_chat_member(%Models.Chat{} = chat, %Models.User{} = user) do
@@ -303,13 +396,13 @@ defmodule LiveQchatex.Chats do
     messages
   end
 
-  def create_message(chat, from_user, text) do
+  def create_message(chat, user, text) do
     chat = chat |> update_last_activity!()
 
     %Models.Message{chat_id: chat.id, text: text}
     |> Map.put(
-      :from_user,
-      foreign_fields(&Models.User.foreign_fields/1, from_user)
+      :user,
+      foreign_fields(&Models.User.foreign_fields/1, user)
     )
     |> Map.put(:timestamp, utc_now())
     |> Repo.write()

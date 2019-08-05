@@ -3,7 +3,7 @@ defmodule LiveQchatex.Models.Message do
   Message model module.
   """
   use Memento.Table,
-    attributes: [:id, :chat_id, :from_user, :text, :timestamp],
+    attributes: [:id, :chat_id, :user, :text, :timestamp],
     index: [:chat_id],
     type: :ordered_set,
     autoincrement: true
@@ -14,7 +14,7 @@ defmodule LiveQchatex.Models.Message do
   @type t :: %__MODULE__{
           id: Integer.t(),
           chat_id: String.t(),
-          from_user: String.t(),
+          user: String.t(),
           text: String.t(),
           timestamp: DateTime.t()
         }

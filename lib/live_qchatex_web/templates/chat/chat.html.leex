@@ -14,7 +14,7 @@
     <ul class="messages-list scroll-on-update">
       <%=for message <- @messages do %>
         <li>
-          <b><%= message.from_user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
+          <b><%= message.user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
           <div class="message-text"><%= message.text %></div>
         </li>
       <% end %>
@@ -47,5 +47,7 @@
     <p class="alert alert-info" role="alert"><%= raw @info %></p>
   <% end %>
 </section>
+
+<%= LiveQchatexWeb.LayoutView.render_invites(assigns) %>
 
 <%= LiveQchatexWeb.LayoutView.render_disclaimer(assigns) %>

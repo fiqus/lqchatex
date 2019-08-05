@@ -26,8 +26,8 @@ defmodule LiveQchatex.ChatsTest do
       chat
     end
 
-    def message_fixture(%Models.Chat{} = chat, from_user \\ %Models.User{}) do
-      {:ok, message} = Chats.create_message(chat, from_user, "Test message!")
+    def message_fixture(%Models.Chat{} = chat, user \\ %Models.User{}) do
+      {:ok, message} = Chats.create_message(chat, user, "Test message!")
       message
     end
 

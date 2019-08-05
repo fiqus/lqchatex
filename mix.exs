@@ -3,7 +3,7 @@ defmodule LiveQchatex.MixProject do
 
   @github_url "https://github.com/fiqus/lqchatex"
   @demo_url "https://lqchatex.fiqus.coop"
-  @version "0.1.2"
+  @version "0.2.0"
 
   def project do
     [

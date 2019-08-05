@@ -3,6 +3,7 @@ defmodule LiveQchatexWeb.LayoutView do
 
   def render_counters(assigns), do: render("counters.html", assigns)
   def render_disclaimer(assigns), do: render("disclaimer.html", assigns)
+  def render_invites(assigns), do: render("invites.html", assigns)
 
   def render_version(),
     do: "Live Qchatex <b>v#{get_app_version()}.#{get_commit_date()}</b> at #{get_commit_link()}"

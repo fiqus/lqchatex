@@ -38,6 +38,10 @@ defmodule LiveQchatex.Application do
     :ok
   end
 
+  def get_repo_pid() do
+    Process.whereis(LiveQchatex.Repo)
+  end
+
   def env, do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:environment]
   def env?(environment), do: env() == environment
 

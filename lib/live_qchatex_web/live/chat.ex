@@ -10,7 +10,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     try do
       socket = socket |> fetch_chat!(id) |> fetch_user(sid)
       if connected?(socket), do: Chats.track(socket.assigns.chat, socket.assigns.user)
-      {:ok, socket |> fetch()}
+      {:ok, socket |> maybe_clear_invite() |> fetch()}
     rescue
       err ->
         Logger.error("Can't mount the chat #{inspect(err)}")
@@ -85,12 +85,13 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket |> update_messages(message)}
   end
 
-  def handle_info(%{event: "presence_diff", payload: payload}, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE PRESENCE DIFF: #{inspect(payload)}",
+  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
+    Logger.debug(
+      "[#{socket.id}][chat-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
       ansi_color: :magenta
     )
 
-    {:noreply, socket |> handle_presence_payload(payload) |> update_members()}
+    {:noreply, socket |> handle_presence_payload(topic, payload)}
   end
 
   def handle_info({:hearthbeat, _, _} = info, socket) do
@@ -172,15 +173,18 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     {:noreply, socket}
   end
 
-  defp handle_presence_payload(socket, %{joins: _joins, leaves: _leaves}) do
-    # members = joins
-    # |> Map.values
-    # |> Enum.map(&(&1.metas |> List.first()))
-    socket
-  end
+  defp handle_presence_payload(socket, topic, payload) do
+    cond do
+      topic == Chats.topic(:presence, :chats) ->
+        socket |> maybe_clear_invite(payload) |> update_invites()
 
-  defp maybe_cancel_typing_timer(nil), do: :ignore
-  defp maybe_cancel_typing_timer(typing_timer), do: Process.cancel_timer(typing_timer)
+      topic == Chats.topic(socket.assigns.user) ->
+        socket |> update_invites()
+
+      true ->
+        socket |> update_members()
+    end
+  end
 
   defp fetch_chat!(socket, id) do
     socket |> assign(chat_id: id, chat: Chats.get_chat!(id))
@@ -194,6 +198,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   defp fetch(%{:assigns => %{:chat => chat}} = socket) do
     socket
     |> update_members()
+    |> update_invites()
     |> assign(
       messages: Chats.get_messages(chat),
       counters: %{
@@ -236,6 +241,10 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   defp update_members(%{assigns: %{chat: chat}} = socket) do
     socket |> assign(members: chat |> Chats.list_chat_members())
+  end
+
+  defp update_invites(%{assigns: %{user: user}} = socket) do
+    socket |> assign(invites: user |> Chats.list_chat_invites())
   end
 
   defp update_messages(%{:assigns => %{:messages => messages}} = socket, message) do
@@ -296,6 +305,35 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
       {:noreply, socket}
     end
   end
+
+  defp maybe_clear_invite(%{assigns: assigns} = socket) do
+    Chats.topic(assigns.user)
+    |> LiveQchatex.Presence.list_presences()
+    |> Enum.find(&(&1.chat == assigns.chat.id))
+    |> maybe_clear_invite(socket)
+  end
+
+  defp maybe_clear_invite(nil, socket), do: socket
+
+  defp maybe_clear_invite(invite, %{assigns: assigns} = socket) do
+    Chats.private_chat_clear(assigns.user, invite.key)
+    socket
+  end
+
+  defp maybe_clear_invite(%{assigns: assigns} = socket, %{leaves: leaves}) do
+    leaves
+    |> Enum.each(fn {chat_id, %{metas: [%{user: user_id}]}} ->
+      Chats.topic(assigns.user)
+      |> LiveQchatex.Presence.list_presences()
+      |> Enum.find(&(&1.chat == chat_id and &1.key == user_id))
+      |> maybe_clear_invite(socket)
+    end)
+
+    socket
+  end
+
+  defp maybe_cancel_typing_timer(nil), do: :ignore
+  defp maybe_cancel_typing_timer(typing_timer), do: Process.cancel_timer(typing_timer)
 
   defp get_message_type(text) do
     cond do
