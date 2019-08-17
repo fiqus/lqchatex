@@ -1,10 +1,11 @@
 defmodule LiveQchatexWeb.LiveChat.ChatsList do
-  use Phoenix.LiveView
-  require Logger
-  alias LiveQchatex.Chats
-  alias LiveQchatexWeb.ChatView
+  use LiveQchatexWeb, :live_view
+
+  @behaviour Handlers
+  @view_name "chat-list"
 
   def mount(_, socket) do
+    setup_logger(socket, @view_name)
     if connected?(socket), do: [Chats.subscribe(), Chats.subscribe(:presence, :chats)]
     {:ok, socket |> fetch()}
   end
@@ -13,46 +14,21 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
     ChatView.render("chats_list.html", assigns)
   end
 
-  def handle_info({[:chat, :created], chat} = info, socket) do
-    Logger.debug("[#{socket.id}][chats-list-view] HANDLE CHAT CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_chat_created(socket, chat),
+    do: if(chat.private != true, do: add_public_chat(socket, chat), else: socket)
 
-    {:noreply, if(chat.private != true, do: add_public_chat(socket, chat), else: socket)}
-  end
+  @impl Handlers
+  def handle_chat_updated(socket, chat),
+    do: socket |> update_public_chat(chat)
 
-  def handle_info({[:chat, :updated], chat} = info, socket) do
-    Logger.debug("[#{socket.id}][chats-list-view] HANDLE CHAT UPDATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> update_public_chat(chat)}
-  end
-
-  def handle_info({[:chat, :cleared], _} = info, socket) do
-    Logger.debug("[#{socket.id}][chats-list-view] HANDLE CHAT CLEARED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
+  @impl Handlers
+  def handle_chat_cleared(socket, _counter),
     # Reload all public chats again (should be improved)
-    {:noreply, socket |> fetch()}
-  end
+    do: socket |> fetch()
 
-  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
-    Logger.debug(
-      "[#{socket.id}][chats-list-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> handle_presence_payload(topic, payload)}
-  end
-
-  def handle_info(info, socket) do
-    Logger.warn("[#{socket.id}][chats-list-view] UNHANDLED INFO: #{inspect(info)}")
-    {:noreply, socket}
-  end
-
-  defp handle_presence_payload(socket, _topic, %{joins: joins, leaves: leaves}) do
+  @impl Handlers
+  def handle_presence_payload(socket, _topic, %{joins: joins, leaves: leaves}) do
     chats_ids = Enum.uniq(Map.keys(joins) ++ Map.keys(leaves))
 
     chats =
@@ -60,6 +36,11 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
       |> Enum.map(&if Enum.member?(chats_ids, &1.id), do: add_chat_members_count(&1), else: &1)
 
     socket |> fetch(chats)
+  end
+
+  def handle_info(info, socket) do
+    Logger.warn("UNHANDLED INFO: #{inspect(info)}")
+    {:noreply, socket}
   end
 
   defp fetch(socket) do
@@ -75,7 +56,7 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
   end
 
   defp add_public_chat(socket, chat) do
-    Logger.debug("[#{socket.id}][chats-list-view] Adding public chat: #{chat.title}")
+    Logger.debug("Adding public chat: #{chat.title}")
     socket |> fetch([chat |> add_chat_members_count() | socket.assigns.chats])
   end
 
@@ -87,14 +68,14 @@ defmodule LiveQchatexWeb.LiveChat.ChatsList do
         socket
 
       {true, _} ->
-        Logger.debug("[#{socket.id}][chats-list-view] Removing private chat: #{chat.title}")
+        Logger.debug("Removing private chat: #{chat.title}")
         socket |> fetch(socket.assigns.chats |> Enum.reject(&(&1.id == chat.id)))
 
       {false, nil} ->
         socket |> add_public_chat(chat)
 
       {false, _} ->
-        Logger.debug("[#{socket.id}][chats-list-view] Updating public chat: #{chat.title}")
+        Logger.debug("Updating public chat: #{chat.title}")
 
         socket
         |> fetch(

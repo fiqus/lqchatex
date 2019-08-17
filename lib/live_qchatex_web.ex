@@ -47,6 +47,25 @@ defmodule LiveQchatexWeb do
     end
   end
 
+  def live_view do
+    quote do
+      use Phoenix.LiveView
+
+      require Logger
+
+      use LiveQchatexWeb.LiveChat.Handlers
+
+      alias LiveQchatex.Chats
+      alias LiveQchatex.Models
+      alias LiveQchatexWeb.ChatView
+      alias LiveQchatexWeb.LiveChat.Handlers
+      alias LiveQchatexWeb.Router.Helpers, as: Routes
+
+      defp setup_logger(socket, view),
+        do: Logger.metadata(socket_id: "[#{socket.id}]", view: "[#{view}]")
+    end
+  end
+
   def router do
     quote do
       use Phoenix.Router

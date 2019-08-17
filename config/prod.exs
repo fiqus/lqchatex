@@ -18,8 +18,8 @@ config :live_qchatex, LiveQchatexWeb.Endpoint,
 
 # Configures app timers in SECONDS
 config :live_qchatex, :timers,
-  cron_interval_clean_chats: 60 * 60,
-  cron_interval_clean_users: 60 * 30
+  cron_interval_clean_chats: 60 * 30,
+  cron_interval_clean_users: 60 * 5
 
 # Do not print debug messages in production
 config :logger, level: :info

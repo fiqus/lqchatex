@@ -1,10 +1,11 @@
 defmodule LiveQchatexWeb.LiveChat.User do
-  use Phoenix.LiveView
-  require Logger
-  alias LiveQchatex.Chats
-  alias LiveQchatexWeb.Router.Helpers, as: Routes
+  use LiveQchatexWeb, :live_view
+
+  @view_name "user-invite"
 
   def mount(%{sid: sid, path_params: %{"id" => user_id}}, socket) do
+    setup_logger(socket, @view_name)
+
     try do
       from_user = Chats.get_user!(sid)
       to_user = Chats.get_user!(user_id)

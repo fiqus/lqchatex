@@ -20,8 +20,8 @@ config :live_qchatex, LiveQchatexWeb.Endpoint,
 
 # Configures app timers in SECONDS
 config :live_qchatex, :timers,
-  cron_interval_clean_chats: 60 * 30,
-  cron_interval_clean_users: 60 * 10,
+  cron_interval_clean_chats: 60 * 10,
+  cron_interval_clean_users: 60 * 5,
   user_typing_timeout: 3
 
 # Configures Memento/Mnesia
@@ -31,14 +31,12 @@ config :mnesia,
 
 # Configures Elixir's Logger
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
+  format: "[$level][$time] $metadata$message\n",
+  metadata: [:socket_id, :view]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 config :phoenix, :template_engines, leex: Phoenix.LiveView.Engine
-
-# config :phoenix, :template_engines, leex: Phoenix.LiveView.Engine
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

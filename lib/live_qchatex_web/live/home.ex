@@ -1,12 +1,12 @@
 defmodule LiveQchatexWeb.LiveChat.Home do
-  use Phoenix.LiveView
-  require Logger
-  alias LiveQchatex.Chats
-  alias LiveQchatex.Models
-  alias LiveQchatexWeb.ChatView
-  alias LiveQchatexWeb.Router.Helpers, as: Routes
+  use LiveQchatexWeb, :live_view
+
+  @behaviour Handlers
+  @view_name "home"
 
   def mount(%{sid: sid}, socket) do
+    setup_logger(socket, @view_name)
+
     try do
       socket = socket |> fetch_user(sid)
       if connected?(socket), do: Chats.track(socket.assigns.user)
@@ -26,57 +26,38 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     ChatView.render("home.html", assigns)
   end
 
-  def handle_info({[:chat, :created], _chat} = info, socket) do
-    Logger.debug("[#{socket.id}][home-view] HANDLE CHAT CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_chat_created(socket, _chat),
+    do: socket |> update_counter(:chats, 1)
 
-    {:noreply, socket |> update_counter(:chats, 1)}
-  end
+  @impl Handlers
+  def handle_chat_cleared(socket, counter),
+    do: socket |> set_counter(:chats, counter)
 
-  def handle_info({[:chat, :cleared], counter} = info, socket) do
-    Logger.debug("[#{socket.id}][home-view] HANDLE CHAT CLEARED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_user_created(socket, _user),
+    do: socket |> update_counter(:users, 1)
 
-    {:noreply, socket |> set_counter(:chats, counter)}
-  end
+  @impl Handlers
+  def handle_user_cleared(socket, counter),
+    do: socket |> set_counter(:users, counter)
 
-  def handle_info({[:user, :created], _user} = info, socket) do
-    Logger.debug("[#{socket.id}][home-view] HANDLE USER CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_presence_payload(socket, topic, payload) do
+    cond do
+      topic == Chats.topic(:presence, :chats) ->
+        socket |> maybe_clear_invite(payload) |> update_invites()
 
-    {:noreply, socket |> update_counter(:users, 1)}
-  end
+      topic == Chats.topic(socket.assigns.user) ->
+        socket |> update_invites()
 
-  def handle_info({[:user, :cleared], counter} = info, socket) do
-    Logger.debug("[#{socket.id}][home-view] HANDLE USER CLEARED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> set_counter(:users, counter)}
-  end
-
-  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
-    Logger.debug(
-      "[#{socket.id}][home-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> handle_presence_payload(topic, payload)}
-  end
-
-  def handle_info({:hearthbeat, _, _} = info, socket) do
-    Logger.debug("[#{socket.id}][home-view] HANDLE HEARTHBEAT: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    Chats.handle_hearthbeat(info, socket)
+      true ->
+        socket
+    end
   end
 
   def handle_info(info, socket) do
-    Logger.warn("[#{socket.id}][home-view] UNHANDLED INFO: #{inspect(info)}")
+    Logger.warn("UNHANDLED INFO: #{inspect(info)}")
     {:noreply, socket}
   end
 
@@ -99,21 +80,8 @@ defmodule LiveQchatexWeb.LiveChat.Home do
       redirect_to_chat(socket, chat)
     rescue
       err ->
-        Logger.debug("Can't join the chat #{inspect(err)}")
+        Logger.error("Can't join the chat #{inspect(err)}")
         response_error(socket, "The chat doesn't exist!")
-    end
-  end
-
-  defp handle_presence_payload(socket, topic, payload) do
-    cond do
-      topic == Chats.topic(:presence, :chats) ->
-        socket |> maybe_clear_invite(payload) |> update_invites()
-
-      topic == Chats.topic(socket.assigns.user) ->
-        socket |> update_invites()
-
-      true ->
-        socket
     end
   end
 

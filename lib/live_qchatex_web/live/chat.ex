@@ -1,12 +1,12 @@
 defmodule LiveQchatexWeb.LiveChat.Chat do
-  use Phoenix.LiveView
-  require Logger
-  alias LiveQchatex.Chats
-  alias LiveQchatex.Models
-  alias LiveQchatexWeb.ChatView
-  alias LiveQchatexWeb.Router.Helpers, as: Routes
+  use LiveQchatexWeb, :live_view
+
+  @behaviour Handlers
+  @view_name "chat-room"
 
   def mount(%{sid: sid, path_params: %{"id" => id}}, socket) do
+    setup_logger(socket, @view_name)
+
     try do
       socket = socket |> fetch_chat!(id) |> fetch_user(sid)
       if connected?(socket), do: Chats.track(socket.assigns.chat, socket.assigns.user)
@@ -27,50 +27,42 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     ChatView.render("chat.html", assigns)
   end
 
-  def handle_info({[:chat, :created], _chat} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_chat_created(socket, _chat),
+    do: socket |> update_counter(:chats, 1)
 
-    {:noreply, socket |> update_counter(:chats, 1)}
-  end
+  @impl Handlers
+  def handle_chat_updated(socket, chat),
+    do: socket |> update_chat(chat)
 
-  def handle_info({[:chat, :updated], chat} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT UPDATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_chat_cleared(socket, counter),
+    do: socket |> set_counter(:chats, counter)
 
-    {:noreply, socket |> update_chat(chat)}
-  end
+  @impl Handlers
+  def handle_user_created(socket, _user),
+    do: socket |> update_counter(:users, 1)
 
-  def handle_info({[:chat, :cleared], counter} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE CHAT CLEARED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+  @impl Handlers
+  def handle_user_cleared(socket, counter),
+    do: socket |> set_counter(:users, counter)
 
-    {:noreply, socket |> set_counter(:chats, counter)}
-  end
+  @impl Handlers
+  def handle_presence_payload(socket, topic, payload) do
+    cond do
+      topic == Chats.topic(:presence, :chats) ->
+        socket |> maybe_clear_invite(payload) |> update_invites()
 
-  def handle_info({[:user, :created], _user} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+      topic == Chats.topic(socket.assigns.user) ->
+        socket |> update_invites()
 
-    {:noreply, socket |> update_counter(:users, 1)}
-  end
-
-  def handle_info({[:user, :cleared], counter} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER CLEARED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> set_counter(:users, counter)}
+      true ->
+        socket |> update_members()
+    end
   end
 
   def handle_info({[:user, :typing, :end]} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE USER TYPING end: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+    Logger.debug("HANDLE USER TYPING END: #{inspect(info)}", ansi_color: :magenta)
 
     user = Chats.update_last_activity!(socket.assigns.user)
     Chats.update_member_typing(socket.assigns.chat, socket.assigns.user, false)
@@ -78,32 +70,13 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   end
 
   def handle_info({[:message, :created], message} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE MESSAGE CREATED: #{inspect(info)}",
-      ansi_color: :magenta
-    )
+    Logger.debug("HANDLE MESSAGE CREATED: #{inspect(info)}", ansi_color: :magenta)
 
     {:noreply, socket |> update_messages(message)}
   end
 
-  def handle_info(%{event: "presence_diff", topic: topic, payload: payload}, socket) do
-    Logger.debug(
-      "[#{socket.id}][chat-view] HANDLE PRESENCE DIFF FOR '#{topic}': #{inspect(payload)}",
-      ansi_color: :magenta
-    )
-
-    {:noreply, socket |> handle_presence_payload(topic, payload)}
-  end
-
-  def handle_info({:hearthbeat, _, _} = info, socket) do
-    Logger.debug("[#{socket.id}][chat-view] HANDLE HEARTHBEAT: #{inspect(info)}",
-      ansi_color: :magenta
-    )
-
-    Chats.handle_hearthbeat(info, socket)
-  end
-
   def handle_info(info, socket) do
-    Logger.warn("[#{socket.id}][chat-view] UNHANDLED INFO: #{inspect(info)}")
+    Logger.warn("UNHANDLED INFO: #{inspect(info)}")
     {:noreply, socket}
   end
 
@@ -169,21 +142,8 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   end
 
   def handle_event(event, data, socket) do
-    Logger.warn("[#{socket.id}][chat-view] UNHANDLED EVENT '#{event}': #{inspect(data)}")
+    Logger.warn("UNHANDLED EVENT '#{event}': #{inspect(data)}")
     {:noreply, socket}
-  end
-
-  defp handle_presence_payload(socket, topic, payload) do
-    cond do
-      topic == Chats.topic(:presence, :chats) ->
-        socket |> maybe_clear_invite(payload) |> update_invites()
-
-      topic == Chats.topic(socket.assigns.user) ->
-        socket |> update_invites()
-
-      true ->
-        socket |> update_members()
-    end
   end
 
   defp fetch_chat!(socket, id) do
@@ -252,7 +212,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   end
 
   defp update_nickname(%{:assigns => %{:user => user}} = socket, nick) do
-    Logger.debug("[#{socket.id}][chat-view] Changed nickname to: #{inspect(nick)}")
+    Logger.debug("Changed nickname to: #{inspect(nick)}")
     message = "Renamed from #{inspect(user.nickname)} to #{inspect(nick)}"
 
     handle_event(
@@ -274,7 +234,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   end
 
   defp update_title(%{:assigns => %{:chat => chat}} = socket, title) do
-    Logger.debug("[#{socket.id}][chat-view] Changed title to: #{inspect(title)}")
+    Logger.debug("Changed title to: #{inspect(title)}")
     message = "Changed chat title from #{inspect(chat.title)} to #{inspect(title)}"
 
     handle_event(
@@ -298,7 +258,7 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
   defp maybe_toggle_scope(%{:assigns => %{:chat => chat, :user => user}} = socket) do
     if chat.user_id == user.id do
       scope = if chat.private, do: "public", else: "private"
-      Logger.debug("[#{socket.id}][chat-view] Changing chat scope to: #{scope}")
+      Logger.debug("Changing chat scope to: #{scope}")
 
       {:noreply, socket |> update_chat(:private, scope == "private")}
     else

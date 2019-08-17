@@ -3,7 +3,7 @@ defmodule LiveQchatex.MixProject do
 
   @github_url "https://github.com/fiqus/lqchatex"
   @demo_url "https://lqchatex.fiqus.coop"
-  @version "0.2.0"
+  @version "0.2.1"
 
   def project do
     [
@@ -99,7 +99,7 @@ defmodule LiveQchatex.MixProject do
       get_commit_date()
     ]
 
-    Mix.shell().info("Updating version with: #{inspect(contents)}")
+    Mix.shell().info("\e[33mUpdating app version with: #{inspect(contents)}\e[39m")
     File.write("VERSION", Enum.join(contents, "\n"), [:write])
   end
 
