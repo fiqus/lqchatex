@@ -1,7 +1,6 @@
 defmodule LiveQchatexWeb.LiveChat.ChatsList do
   use LiveQchatexWeb, :live_view
 
-  @behaviour Handlers
   @view_name "chat-list"
 
   def mount(_, socket) do

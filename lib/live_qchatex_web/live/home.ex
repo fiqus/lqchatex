@@ -1,7 +1,6 @@
 defmodule LiveQchatexWeb.LiveChat.Home do
   use LiveQchatexWeb, :live_view
 
-  @behaviour Handlers
   @view_name "home"
 
   def mount(%{sid: sid}, socket) do

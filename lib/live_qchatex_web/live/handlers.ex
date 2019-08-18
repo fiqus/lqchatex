@@ -1,4 +1,5 @@
 defmodule LiveQchatexWeb.LiveChat.Handlers do
+  alias __MODULE__
   alias LiveQchatex.Chats
   alias LiveQchatex.Models
   alias Phoenix.LiveView.Socket
@@ -17,7 +18,7 @@ defmodule LiveQchatexWeb.LiveChat.Handlers do
     quote do
       require Logger
 
-      @behaviour __MODULE__
+      @behaviour Handlers
 
       def handle_info({[:chat, :created], chat} = info, socket) do
         Logger.debug("HANDLE CHAT CREATED: #{inspect(info)}", ansi_color: :magenta)

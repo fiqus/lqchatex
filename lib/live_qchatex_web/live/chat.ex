@@ -1,7 +1,6 @@
 defmodule LiveQchatexWeb.LiveChat.Chat do
   use LiveQchatexWeb, :live_view
 
-  @behaviour Handlers
   @view_name "chat-room"
 
   def mount(%{sid: sid, path_params: %{"id" => id}}, socket) do
