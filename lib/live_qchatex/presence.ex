@@ -26,8 +26,8 @@ defmodule LiveQchatex.Presence do
   def list_presences(topic),
     do:
       Presence.list(topic)
-      |> Enum.map(fn {key, data} ->
-        data[:metas] |> List.first() |> Map.merge(%{key: key})
+      |> Enum.map(fn {key, %{metas: metas}} ->
+        metas |> List.first() |> Map.merge(%{key: key})
       end)
 
   def count_presences(topic),

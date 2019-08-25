@@ -31,7 +31,7 @@ defmodule LiveQchatex.Chats do
     })
 
     subscribe(chat)
-    hearthbeat(chat, :refresh)
+    heartbeat(chat, :refresh)
     track(user)
   end
 
@@ -39,7 +39,7 @@ defmodule LiveQchatex.Chats do
     subscribe()
     subscribe(user)
     subscribe(:presence, :chats)
-    hearthbeat(user, :refresh)
+    heartbeat(user, :refresh)
   end
 
   def private_chat_invite(
@@ -96,31 +96,31 @@ defmodule LiveQchatex.Chats do
     result
   end
 
-  def handle_hearthbeat({:hearthbeat, :chat, chat_id}, state),
-    do: hearthbeat(%Models.Chat{id: chat_id}, state)
+  def handle_heartbeat({:heartbeat, :chat, chat_id}, state),
+    do: heartbeat(%Models.Chat{id: chat_id}, state)
 
-  def handle_hearthbeat({:hearthbeat, :user, user_id}, state),
-    do: hearthbeat(%Models.User{id: user_id}, state)
+  def handle_heartbeat({:heartbeat, :user, user_id}, state),
+    do: heartbeat(%Models.User{id: user_id}, state)
 
-  defp hearthbeat(model, state) do
-    model |> update_last_activity!() |> hearthbeat()
+  defp heartbeat(model, state) do
+    model |> update_last_activity!() |> heartbeat()
     {:noreply, state}
   end
 
-  defp hearthbeat(%Models.Chat{} = chat) do
+  defp heartbeat(%Models.Chat{} = chat) do
     interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_chats] |> div(2)
 
-    Logger.debug("Sending CHAT hearthbeat every #{interval} seconds..")
+    Logger.debug("Sending CHAT heartbeat every #{interval} seconds..")
 
-    Process.send_after(self(), {:hearthbeat, :chat, chat.id}, interval * 1000)
+    Process.send_after(self(), {:heartbeat, :chat, chat.id}, interval * 1000)
   end
 
-  defp hearthbeat(%Models.User{} = user) do
+  defp heartbeat(%Models.User{} = user) do
     interval = Application.get_env(:live_qchatex, :timers)[:cron_interval_clean_users] |> div(2)
 
-    Logger.debug("Sending USER hearthbeat every #{interval} seconds..")
+    Logger.debug("Sending USER heartbeat every #{interval} seconds..")
 
-    Process.send_after(self(), {:hearthbeat, :user, user.id}, interval * 1000)
+    Process.send_after(self(), {:heartbeat, :user, user.id}, interval * 1000)
   end
 
   @doc """

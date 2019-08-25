@@ -62,10 +62,10 @@ defmodule LiveQchatexWeb.LiveChat.Handlers do
         {:noreply, socket |> handle_presence_payload(topic, payload)}
       end
 
-      def handle_info({:hearthbeat, _, _} = info, socket) do
-        Logger.debug("HANDLE HEARTHBEAT: #{inspect(info)}", ansi_color: :magenta)
+      def handle_info({:heartbeat, _, _} = info, socket) do
+        Logger.debug("HANDLE HEARTBEAT: #{inspect(info)}", ansi_color: :magenta)
 
-        Chats.handle_hearthbeat(info, socket)
+        Chats.handle_heartbeat(info, socket)
       end
 
       def handle_chat_created(socket, _chat), do: socket

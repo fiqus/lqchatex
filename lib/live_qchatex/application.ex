@@ -21,8 +21,6 @@ defmodule LiveQchatex.Application do
       LiveQchatex.Presence,
       # Start the cron tasks worker
       LiveQchatex.Cron
-      # Starts a worker by calling: LiveQchatex.Worker.start_link(arg)
-      # {LiveQchatex.Worker, arg},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
