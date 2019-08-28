@@ -7,6 +7,8 @@ The idea was to research and practice about [Phoenix LiveView](https://github.co
 Don't need to register, just enter a nickname and you are ready to go!  
 **NOTE:** All chats, messages and users are automatically deleted after a certain period of inactivity.
 
+### App overview PDF: [lqchatex-overview.pdf](https://lqchatex.fiqus.coop/lqchatex-overview.pdf) 
+
 ## Live running demo at: [https://lqchatex.fiqus.coop/](https://lqchatex.fiqus.coop/)  
 Hosted by [gigalixir](https://gigalixir.com/).
 
