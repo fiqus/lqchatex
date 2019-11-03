@@ -39,7 +39,7 @@ defmodule LiveQchatex.MixProject do
   def application do
     [
       mod: {LiveQchatex.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end
 
@@ -56,13 +56,14 @@ defmodule LiveQchatex.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
+      {:phoenix_live_view, "~> 0.3"},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:guardian, "~> 1.0"},
       {:excoveralls, "~> 0.10", only: :test},
-      {:memento, "~> 0.3.1"}
+      {:memento, "~> 0.3"},
+      {:libcluster, "~> 3.0"}
     ]
   end
 
