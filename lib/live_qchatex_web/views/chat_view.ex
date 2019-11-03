@@ -9,7 +9,7 @@ defmodule LiveQchatexWeb.ChatView do
 
     if Map.get(assigns, :click) == "show_input_title" do
       ~s(<form action="#send" phx-submit="update_title">
-        <span><input type="text" name="title" class="focus-select show-select" value="#{
+        <span><input type="text" name="title" phx-hook="select-on-focus" class="select-on-show" value="#{
         chat.title
       }" maxlength="100"/></span>
       </form>)
@@ -41,7 +41,7 @@ defmodule LiveQchatexWeb.ChatView do
     cond do
       member.id == user.id && Map.get(assigns, :click) == "show_input_nickname" ->
         ~s(<form action="#send" phx-submit="update_nickname">
-          <p><input type="text" name="nick" class="focus-select show-select" value="#{
+          <p><input type="text" name="nick" phx-hook="select-on-focus" class="select-on-show" value="#{
           member.nickname
         }" maxlength="20"/></p>
         </form>)

@@ -8,51 +8,19 @@ import css from "../css/app.css"
 // in "webpack.config.js".
 //
 // Import dependencies
-//
 import "phoenix_html"
 import {Socket} from "phoenix"
 import LiveSocket from "phoenix_live_view"
 
+// Import local files
+import hooks from "./hooks"
+
+// Connect to LiveView socket
 const params = {hello: "there!"};
-const liveSocket = new LiveSocket("/live", Socket, {params});
+const liveSocket = new LiveSocket("/live", Socket, {params, hooks});
 liveSocket.connect();
 
-// Import local files
-//
-// Local files can be imported directly using relative paths, for example:
-// import socket from "./socket"
-
-function selectOnFocus() {
-  document.querySelectorAll(".focus-select").forEach((el) => {
-    el.onfocus = () => el.select();
-    if (Array.from(el.classList).indexOf("show-select") > -1) {
-      el.select();
-    }
-  });
-}
-
-function scrollOnUpdate() {
-  document.querySelectorAll(".scroll-on-update").forEach((el) => {
-    el.scrollTop = el.scrollHeight;
-  });
-}
-
-// Select the nodes that will be observed for mutations
-document.querySelectorAll("body").forEach((body) => {
-  // Create an observer instance with a callback function to execute when mutations are observed
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type == "childList") {
-        selectOnFocus();
-        scrollOnUpdate();
-      }
-    }
-  });
-
-  // Start observing the target node for configured mutations (which mutations to observe)
-  observer.observe(body, {attributes: true, childList: true, subtree: true});
-});
-
+// Extra stuff
 window.copyToClipboard = (str) => {
   const el = document.createElement("textarea");  // Create a <textarea> element
   el.value = str;                                 // Set its value to the string that you want copied

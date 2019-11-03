@@ -11,7 +11,7 @@
       <b>Qchatex ID:</b> <%= raw parse_chat_scope(@chat, @user) %>
       <div onclick="copyToClipboard(window.location.href)" class="chat-id" title="Copy chat URL to clipboard!"><%= @chat.id %></div>
     </h4>
-    <ul class="messages-list scroll-on-update">
+    <ul phx-hook="new-chat-message" class="messages-list">
       <%=for message <- @messages do %>
         <li>
           <b><%= message.user.nickname %></b> at <small><%= parse_timestamp(message.timestamp) %></small>
