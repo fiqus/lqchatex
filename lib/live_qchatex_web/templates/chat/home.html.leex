@@ -47,4 +47,4 @@
 
 <%= LiveQchatexWeb.LayoutView.render_disclaimer(assigns) %>
 
-<%= live_render(@socket, LiveQchatexWeb.LiveChat.ChatsList) %>
+<%= live_render(@socket, LiveQchatexWeb.LiveChat.ChatsList, id: "chats-list") %>

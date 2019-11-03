@@ -10,10 +10,12 @@ import css from "../css/app.css"
 // Import dependencies
 //
 import "phoenix_html"
+import {Socket} from "phoenix"
 import LiveSocket from "phoenix_live_view"
 
-let liveSocket = new LiveSocket("/live")
-liveSocket.connect()
+const params = {hello: "there!"};
+const liveSocket = new LiveSocket("/live", Socket, {params});
+liveSocket.connect();
 
 // Import local files
 //
@@ -21,7 +23,7 @@ liveSocket.connect()
 // import socket from "./socket"
 
 function selectOnFocus() {
-  Array.from(document.getElementsByClassName("focus-select")).forEach((el) => {
+  document.querySelectorAll(".focus-select").forEach((el) => {
     el.onfocus = () => el.select();
     if (Array.from(el.classList).indexOf("show-select") > -1) {
       el.select();
@@ -30,13 +32,13 @@ function selectOnFocus() {
 }
 
 function scrollOnUpdate() {
-  Array.from(document.getElementsByClassName("scroll-on-update")).forEach((el) => {
+  document.querySelectorAll(".scroll-on-update").forEach((el) => {
     el.scrollTop = el.scrollHeight;
   });
 }
 
 // Select the nodes that will be observed for mutations
-Array.from(document.getElementsByTagName("body")).forEach((body) => {
+document.querySelectorAll("body").forEach((body) => {
   // Create an observer instance with a callback function to execute when mutations are observed
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {

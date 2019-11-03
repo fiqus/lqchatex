@@ -3,7 +3,12 @@ defmodule LiveQchatexWeb.LiveChat.User do
 
   @view_name "user-invite"
 
-  def mount(%{sid: sid, path_params: %{"id" => user_id}}, socket) do
+  def mount(%{sid: sid}, socket) do
+    setup_logger(socket, @view_name)
+    {:ok, socket |> assign(:sid, sid)}
+  end
+
+  def handle_params(%{"id" => user_id}, _uri, %{assigns: %{sid: sid}} = socket) do
     setup_logger(socket, @view_name)
 
     try do
@@ -11,20 +16,20 @@ defmodule LiveQchatexWeb.LiveChat.User do
       to_user = Chats.get_user!(user_id)
       chat = generate_chat_and_invite_user(from_user, to_user)
 
-      {:stop,
+      {:noreply,
        socket
        # @TODO Make this message to be displayed on chat screen! (NOT WORKING)
        |> put_flash(:success, "The user was invited! Waiting to join..")
-       |> redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Chat, chat.id))}
+       |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Chat, chat.id))}
     rescue
       err ->
         Logger.error("Can't create the private chat with the user: #{inspect(err)}")
 
-        {:stop,
+        {:noreply,
          socket
          # @TODO Make this error to be displayed on home screen! (NOT WORKING)
          |> put_flash(:error, "Couldn't create the private chat with the user!")
-         |> redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
+         |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
     end
   end
 

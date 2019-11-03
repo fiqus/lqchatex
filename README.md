@@ -16,9 +16,9 @@ Hosted by [gigalixir](https://gigalixir.com/).
 # Development
 ## Pre-requisites
 You will have to install:
-  * `Elixir` 1.8 or later
-  * `Erlang/OTP` 20 or later
-  * `Node.js` 5 or later
+  * `Elixir` 1.9 or later
+  * `Erlang/OTP` 22 or later
+  * `Node.js` 12 or later
 
 ## Start the server
 

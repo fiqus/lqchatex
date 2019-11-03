@@ -16,7 +16,7 @@ defmodule LiveQchatexWeb.Router do
     pipe_through :browser
 
     live "/", LiveChat.Home, session: [:sid]
-    live "/chat/:id", LiveChat.Chat, session: [:sid, :path_params]
-    live "/user/:id", LiveChat.User, session: [:sid, :path_params]
+    live "/chat/:id", LiveChat.Chat, session: [:sid]
+    live "/user/:id", LiveChat.User, session: [:sid]
   end
 end

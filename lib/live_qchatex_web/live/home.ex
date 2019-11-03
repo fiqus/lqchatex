@@ -85,7 +85,7 @@ defmodule LiveQchatexWeb.LiveChat.Home do
   end
 
   defp redirect_to_chat(socket, chat) do
-    {:stop,
+    {:noreply,
      socket
      |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Chat, chat.id))}
   end

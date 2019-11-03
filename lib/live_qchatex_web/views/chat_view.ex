@@ -2,7 +2,7 @@ defmodule LiveQchatexWeb.ChatView do
   use LiveQchatexWeb, :view
 
   def parse_title(assigns, chat, user) do
-    {class, click, title} =
+    {class, action, title} =
       if chat.user_id == user.id,
         do: {"chat-owner", "show_input_title", "Click to change the title!"},
         else: {"", "", ""}
@@ -14,7 +14,9 @@ defmodule LiveQchatexWeb.ChatView do
       }" maxlength="100"/></span>
       </form>)
     else
-      ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}">#{chat.title}</p>)
+      ~s(<p class="#{class}" phx-click="click" phx-value-action="#{action}" title="#{title}">#{
+        chat.title
+      }</p>)
     end
   end
 
@@ -31,7 +33,7 @@ defmodule LiveQchatexWeb.ChatView do
   end
 
   def parse_member(assigns, chat, user, member) do
-    {class, click, title} =
+    {class, action, title} =
       if member.id == user.id,
         do: {"myself", "show_input_nickname", "Click to change your nick!"},
         else: {"member", "", "Click to start a private chat with the user!"}
@@ -45,7 +47,7 @@ defmodule LiveQchatexWeb.ChatView do
         </form>)
 
       member.id == user.id ->
-        ~s(<p class="#{class}" phx-click="click" phx-value="#{click}" title="#{title}" style="color:#{
+        ~s(<p class="#{class}" phx-click="click" phx-value-action="#{action}" title="#{title}" style="color:#{
           member_color(member.id)
         }">#{parse_member_nickname(chat, member)}</p>)
 

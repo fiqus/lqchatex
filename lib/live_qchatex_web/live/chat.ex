@@ -3,22 +3,25 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
 
   @view_name "chat-room"
 
-  def mount(%{sid: sid, path_params: %{"id" => id}}, socket) do
+  def mount(%{sid: sid}, socket) do
     setup_logger(socket, @view_name)
+    {:ok, socket |> fetch_user(sid)}
+  end
 
+  def handle_params(%{"id" => id}, _uri, socket) do
     try do
-      socket = socket |> fetch_chat!(id) |> fetch_user(sid)
+      socket = socket |> fetch_chat!(id)
       if connected?(socket), do: Chats.track(socket.assigns.chat, socket.assigns.user)
-      {:ok, socket |> maybe_clear_invite() |> fetch()}
+      {:noreply, socket |> maybe_clear_invite() |> fetch()}
     rescue
       err ->
         Logger.error("Can't mount the chat #{inspect(err)}")
 
-        {:stop,
+        {:noreply,
          socket
          # @TODO Make this error to be displayed on home screen! (NOT WORKING)
          |> put_flash(:error, "The chat doesn't exist!")
-         |> redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
+         |> live_redirect(to: Routes.live_path(socket, LiveQchatexWeb.LiveChat.Home))}
     end
   end
 
@@ -136,8 +139,8 @@ defmodule LiveQchatexWeb.LiveChat.Chat do
     socket |> maybe_toggle_scope()
   end
 
-  def handle_event("click", data, socket) do
-    {:noreply, socket |> assign(:click, data)}
+  def handle_event("click", %{"action" => action}, socket) do
+    {:noreply, socket |> assign(:click, action)}
   end
 
   def handle_event(event, data, socket) do
