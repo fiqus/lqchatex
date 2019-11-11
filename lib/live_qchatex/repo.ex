@@ -5,7 +5,6 @@ defmodule LiveQchatex.Repo do
 
   alias LiveQchatex.Models
 
-  # @TODO Avoid this for create_tables!()
   @models [Models.Chat, Models.User, Models.Message]
 
   def start_link(init_arg) do
@@ -14,11 +13,8 @@ defmodule LiveQchatex.Repo do
 
   @impl true
   def init(_init_arg) do
-    # @TODO Implement config to [disc_copies: nodes] for tables
-    setup_database!(%{})
-    children = []
-
-    Supervisor.init(children, strategy: :one_for_one)
+    init_mnesia!()
+    Supervisor.init([], strategy: :one_for_one)
   end
 
   def subscribe(topic) do
@@ -53,6 +49,7 @@ defmodule LiveQchatex.Repo do
     end)
   end
 
+  @spec to_atom_map(Map.t()) :: Map.t()
   def to_atom_map(map) do
     map
     |> Enum.reduce(%{}, fn {k, v}, acc ->
@@ -168,44 +165,150 @@ defmodule LiveQchatex.Repo do
     :crypto.strong_rand_bytes(length) |> Base.url_encode64() |> binary_part(0, length)
   end
 
-  # @TODO Use config to [disc_copies: nodes] for tables
-  defp setup_database!(_config, nodes \\ [node()]) do
-    create_schema!(nodes)
-    create_tables!(nodes)
+  ############################## MNESIA CLUSTERED INIT ##############################
+
+  defp init_mnesia!() do
+    wait_for_nodes_connections()
+
+    case find_active_cluster_nodes(Node.list()) do
+      [] -> init_cluster!([node()])
+      nodes -> join_cluster!(nodes)
+    end
   end
 
-  defp create_schema!(nodes) do
-    Logger.info("Mnesia is stopping for schema creation..")
+  defp wait_for_nodes_connections(),
+    do: [Logger.info("Waiting for nodes connections.."), wait_for_nodes_connections(1)]
+
+  defp wait_for_nodes_connections(count) when count <= 10 do
+    if Node.list() == [],
+      do: [Process.sleep(500), wait_for_nodes_connections(count + 1)],
+      else: Logger.info("Nodes connections detected: #{inspect(Node.list())}")
+  end
+
+  defp wait_for_nodes_connections(_),
+    do: Logger.info("No nodes connections detected!")
+
+  defp find_active_cluster_nodes(nodes),
+    do: Enum.filter(nodes, &(:rpc.block_call(&1, :mnesia, :system_info, [:is_running]) == :yes))
+
+  defp init_cluster!(nodes) do
+    desc = "at #{inspect(nodes)}"
+
+    with :ok <- start_mnesia(nodes),
+         :ok <- change_table_copy_type(),
+         :ok <- create_tables(nodes),
+         :ok <- wait_for_tables() do
+      Logger.info("Mnesia started with cluster initialized #{desc}", ansi_color: :yellow)
+    else
+      {_, reason} ->
+        raise "Couldn't initialize mnesia cluster #{desc}: #{inspect(reason)}"
+    end
+  end
+
+  defp join_cluster!(nodes) do
+    desc = "for #{inspect(node())} at #{inspect(nodes)}"
+
+    with :ok <- start_mnesia(nodes),
+         :ok <- connect_to_cluster(nodes),
+         :ok <- change_table_copy_type(),
+         :ok <- sync_tables(),
+         :ok <- wait_for_tables() do
+      Logger.info("Mnesia started and joined cluster nodes #{desc}", ansi_color: :yellow)
+    else
+      {_, reason} ->
+        raise "Couldn't join mnesia cluster #{desc}: #{inspect(reason)}"
+    end
+  end
+
+  defp start_mnesia(nodes) do
+    case init_schema(nodes) do
+      :ok ->
+        case Memento.start() do
+          :ok -> :ok
+          {:error, {:already_started, :mnesia}} -> :ok
+          err -> err
+        end
+
+      err ->
+        err
+    end
+  end
+
+  defp init_schema(nodes) do
+    Logger.info("Mnesia is stopping for schema initialization..")
     Memento.stop()
+
+    @models
+    |> Enum.map(&:mnesia.set_master_nodes(&1, nodes))
+
+    if nodes != [node()] do
+      # Ensure to remove the local schema if this node will be an slave!
+      # This is due to the fact that this node could have an schema
+      # already created with another mnesia cookie, because it was created
+      # in a point of time where no other nodes were available
+      Memento.Schema.delete([node()])
+    end
 
     case Memento.Schema.create(nodes) do
       :ok -> :ok
       {:error, {_, {:already_exists, _}}} -> :ok
-      {:error, reason} -> raise reason
+      {:error, reason} -> {:error, "Couldn't create mnesia schema: #{inspect(reason)}"}
     end
-
-    :ok = Memento.start()
-    Logger.info("Mnesia schema initialized and started!")
   end
 
-  defp create_tables!(nodes) do
-    failed =
-      @models
-      |> Enum.map(fn m -> {m, create_table(nodes, m)} end)
-      |> Enum.reject(fn {_, status} -> status == :ok end)
-
-    if length(failed) > 0 do
-      raise "Some tables couldn't be created: #{inspect(failed)}"
+  defp create_tables(nodes) do
+    @models
+    |> Enum.map(&create_table(nodes, &1))
+    |> Enum.reject(&(&1 == :ok))
+    |> case do
+      [] -> :ok
+      failed -> {:error, "Some tables couldn't be created: #{inspect(failed)}"}
     end
-
-    :ok
   end
 
   defp create_table(nodes, model),
-    # do: create_table(Memento.Table.create(model))
-    do: create_table(Memento.Table.create(model, disc_copies: nodes))
+    do: model |> Memento.Table.create(disc_copies: nodes) |> create_table()
 
-  defp create_table({:error, {:already_exists, _}}), do: :ok
   defp create_table(:ok), do: :ok
+  defp create_table({:error, {:already_exists, _}}), do: :ok
   defp create_table(err), do: err
+
+  defp connect_to_cluster(nodes) do
+    case :mnesia.change_config(:extra_db_nodes, nodes) do
+      {:ok, _} -> :ok
+      err -> err
+    end
+  end
+
+  defp change_table_copy_type() do
+    case :mnesia.change_table_copy_type(:schema, node(), :disc_copies) do
+      {:atomic, :ok} -> :ok
+      {:aborted, {:already_exists, :schema, _, _}} -> :ok
+      err -> err
+    end
+  end
+
+  defp sync_tables() do
+    @models
+    |> Enum.map(fn model ->
+      case :mnesia.add_table_copy(model, node(), :disc_copies) do
+        {:atomic, :ok} -> :ok
+        {:aborted, {:already_exists, _, _}} -> :ok
+        err -> err
+      end
+    end)
+    |> Enum.reject(&(&1 == :ok))
+    |> case do
+      [] -> :ok
+      failed -> {:error, "Some tables couldn't be synced: #{inspect(failed)}"}
+    end
+  end
+
+  defp wait_for_tables() do
+    case :mnesia.wait_for_tables(@models, :timer.seconds(10)) do
+      :ok -> :ok
+      {:timeout, tables} -> {:error, "Timeout for tables #{inspect(tables)}"}
+      err -> err
+    end
+  end
 end

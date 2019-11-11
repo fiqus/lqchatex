@@ -3,7 +3,7 @@ defmodule LiveQchatex.MixProject do
 
   @github_url "https://github.com/fiqus/lqchatex"
   @demo_url "https://lqchatex.fiqus.coop"
-  @version "0.2.1"
+  @version "0.3.0"
 
   def project do
     [
@@ -39,7 +39,7 @@ defmodule LiveQchatex.MixProject do
   def application do
     [
       mod: {LiveQchatex.Application, []},
-      extra_applications: [:logger, :runtime_tools, :mnesia]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -72,7 +72,7 @@ defmodule LiveQchatex.MixProject do
     [
       lqchatex: [
         include_executables_for: [:unix, :windows],
-        applications: [runtime_tools: :permanent]
+        applications: [runtime_tools: :permanent, live_qchatex: :permanent]
       ]
     ]
   end

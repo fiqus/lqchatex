@@ -7,6 +7,11 @@
 # General application configuration
 use Mix.Config
 
+# config :libcluster,
+#   debug: true
+# config :mnesia,
+#   debug: true
+
 # Configures the endpoint
 config :live_qchatex, LiveQchatexWeb.Endpoint,
   environment: Mix.env(),
