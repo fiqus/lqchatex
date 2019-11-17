@@ -47,6 +47,7 @@ footer {
 }
 
 .disclaimer {
+  margin-top: 2.5em;
   font-size: 80%;
 }
 
@@ -71,14 +72,18 @@ footer {
   margin-bottom: auto;
 }
 
-.chats-list {
-  margin-top: 2em;
+.chat-start-container {
+  border-right: 1px dashed #ddd;
 }
-.chats-list h2 {
-  border-bottom: 1px solid #ddd;
+.chat-start-container form {
+  margin-bottom: auto;
 }
-.chats-list ul {
+.chat-list-container ul {
   list-style: none;
+}
+.chat-start-container h3,
+.chat-list-container h3 {
+  border-bottom: 1px solid #ddd;
 }
 
 .chat-room {

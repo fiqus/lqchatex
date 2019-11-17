@@ -1,7 +1,7 @@
 <section class="chats-list">
-  <%= if @counter > 0 do %>
-  <h2>Public living chats: <%= @counter%></h2>
+  <h3>Public living chats: <%= @counter%></h3>
 
+  <%= if @counter > 0 do %>
   <ul>
     <%= for chat <- @chats do %> 
     <li><%= live_link("(#{chat.members}) #{chat.title}",
@@ -9,5 +9,7 @@
       title: "Click to join this public chat!") %></li>
     <% end %>
   </ul>
+  <% else %>
+  <i>- no public chats to list -</i>
   <% end %>
 </section>

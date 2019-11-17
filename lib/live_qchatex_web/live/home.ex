@@ -72,18 +72,6 @@ defmodule LiveQchatexWeb.LiveChat.Home do
     end
   end
 
-  def handle_event("join", %{"chat" => cdata, "user" => udata}, socket) do
-    try do
-      chat = Chats.get_chat!(cdata["id"])
-      {:ok, _user} = Chats.update_user(socket.assigns.user, udata)
-      redirect_to_chat(socket, chat)
-    rescue
-      err ->
-        Logger.error("Can't join the chat #{inspect(err)}")
-        response_error(socket, "The chat doesn't exist!")
-    end
-  end
-
   defp redirect_to_chat(socket, chat) do
     {:noreply,
      socket
