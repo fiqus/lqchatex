@@ -1,7 +1,6 @@
 import Config
 
-config :live_qchatex, LiveQchatexWeb.Endpoint,
-  debug_errors: false
+config :live_qchatex, LiveQchatexWeb.Endpoint, debug_errors: false
 
 # Configures Memento/Mnesia
 config :mnesia,

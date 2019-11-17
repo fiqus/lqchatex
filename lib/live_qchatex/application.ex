@@ -11,21 +11,10 @@ defmodule LiveQchatex.Application do
     # Load application version
     load_version()
 
-    # Set cluster topologies
-    topologies = [
-      gossip: [
-        strategy: Cluster.Strategy.Gossip,
-        config: [secret: "eG0AWVt6t2daMBx89/sDtQV1UsG8IFINeFhZImU23MW56q0Cni9ffiqnetmTCVHC"]
-      ]
-      # epmd: [
-      #   strategy: Cluster.Strategy.Epmd,
-      #   config: [hosts: [:"s1@127.0.0.1", :"s2@127.0.0.1"]]
-      # ]
-    ]
-
     # List all child processes to be supervised
     children = [
-      {Cluster.Supervisor, [topologies, [name: LiveQchatex.ClusterSupervisor]]},
+      {Cluster.Supervisor,
+       [env() |> cluster_topologies(), [name: LiveQchatex.ClusterSupervisor]]},
       # Start the application repository
       LiveQchatex.Repo,
       # Start the endpoint when the application starts
@@ -71,4 +60,19 @@ defmodule LiveQchatex.Application do
 
     Application.put_env(:live_qchatex, :version, version)
   end
+
+  defp cluster_topologies(:test), do: []
+
+  defp cluster_topologies(_),
+    do: [
+      gossip: [
+        strategy: Cluster.Strategy.Gossip,
+        config: [secret: "eG0AWVt6t2daMBx89/sDtQV1UsG8IFINeFhZImU23MW56q0Cni9ffiqnetmTCVHC"]
+      ]
+      # Just an example of EPMD topology
+      # epmd: [
+      #   strategy: Cluster.Strategy.Epmd,
+      #   config: [hosts: [:"s1@127.0.0.1", :"s2@127.0.0.1"]]
+      # ]
+    ]
 end
