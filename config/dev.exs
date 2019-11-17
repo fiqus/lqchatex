@@ -1,5 +1,10 @@
 use Mix.Config
 
+# config :libcluster,
+#   debug: true
+# config :mnesia,
+#   debug: true
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
