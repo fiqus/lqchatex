@@ -8,8 +8,7 @@ defmodule LiveQchatex.Application do
   require Logger
 
   def start(_type, _args) do
-    # Load application version
-    load_version()
+    Logger.info("Starting app version: #{inspect(version())}", ansi_color: :yellow)
 
     # List all child processes to be supervised
     children = [
@@ -45,21 +44,8 @@ defmodule LiveQchatex.Application do
   def env, do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:environment]
   def env?(environment), do: env() == environment
 
-  def version, do: Application.get_env(:live_qchatex, :version)
+  def version, do: Application.get_env(:live_qchatex, LiveQchatexWeb.Endpoint)[:version]
   def version(key), do: version()[key]
-
-  defp load_version() do
-    [vsn, hash, date] =
-      case File.read("VERSION") do
-        {:ok, data} -> data |> String.split("\n")
-        _ -> [nil, nil, nil]
-      end
-
-    version = %{vsn: vsn, hash: hash, date: date}
-    Logger.info("Loading app version: #{inspect(version)}", ansi_color: :yellow)
-
-    Application.put_env(:live_qchatex, :version, version)
-  end
 
   defp cluster_topologies(:test), do: []
 

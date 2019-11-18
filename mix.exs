@@ -9,6 +9,7 @@ defmodule LiveQchatex.MixProject do
     [
       app: :live_qchatex,
       version: @version,
+      git_version: read_git_version(),
       name: "LiveQchatex",
       description:
         "Very simple and quick chat engine that allows you to create and join chat rooms on-the-fly.",
@@ -81,7 +82,7 @@ defmodule LiveQchatex.MixProject do
   defp aliases do
     [
       coverage: ["coveralls.html"],
-      "deps.get": ["deps.get", &update_version/1],
+      "deps.get": ["deps.get", &update_git_version/1],
       "mnesia.reset": fn _ -> reset_mnesia(Mix.env()) end
     ]
   end
@@ -93,7 +94,17 @@ defmodule LiveQchatex.MixProject do
     Mix.shell().cmd("rm -rf .mnesia")
   end
 
-  defp update_version(_) do
+  defp read_git_version() do
+    [vsn, hash, date] =
+      case File.read("VERSION") do
+        {:ok, data} -> data |> String.split("\n")
+        _ -> [@version, nil, nil]
+      end
+
+    %{vsn: vsn, hash: hash, date: date}
+  end
+
+  defp update_git_version(_) do
     contents = [
       @version,
       get_commit_sha(),

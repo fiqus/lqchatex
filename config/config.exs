@@ -10,6 +10,7 @@ use Mix.Config
 # Configures the endpoint
 config :live_qchatex, LiveQchatexWeb.Endpoint,
   environment: Mix.env(),
+  version: Mix.Project.config()[:git_version],
   repo: Mix.Project.config()[:source_url],
   demo: Mix.Project.config()[:demo_url],
   url: [host: "localhost"],
